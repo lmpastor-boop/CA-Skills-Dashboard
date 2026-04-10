@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>California Skills — Scenario Simulator</title>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1E2761; --ice: #CADCFC; --white: #FFFFFF; --off: #F4F6FB;
+    --muted: #64748B; --dark: #1E293B; --border: rgba(0,0,0,0.08);
+    --blue: #185FA5; --teal: #1D9E75; --amber: #BA7517; --red: #A32D2D;
+    --purple: #534AB7; --green: #3B6D11;
+    --comm: #185FA5; --comp: #1D9E75; --info: #BA7517; --mach: #E24B4A; --mgmt: #7F77DD;
+  }
+  body { font-family: -apple-system,'Segoe UI',sans-serif; background: #F0F2F8; color: var(--dark); min-height: 100vh; }
+
+  header { background: var(--navy); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { color: var(--white); font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
+  header .sub { color: var(--ice); font-size: 12px; font-family: monospace; margin-top: 2px; }
+  .badge { background: rgba(202,220,252,0.18); color: var(--ice); font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(202,220,252,0.3); font-family: monospace; }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 24px 48px; }
+
+  .controls { background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+  .ctrl-group { display: flex; flex-direction: column; gap: 7px; }
+  .ctrl-group label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .sector-btns { display: flex; gap: 7px; }
+  .s-btn { font-size: 13px; font-family: -apple-system,'Segoe UI',sans-serif; padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--off); color: var(--muted); cursor: pointer; transition: all 0.15s; font-weight: 400; }
+  .s-btn:hover { border-color: rgba(30,39,97,0.2); color: var(--dark); }
+  .s-btn.active { background: var(--navy); color: var(--white); border-color: var(--navy); font-weight: 500; }
+  .slider-wrap { display: flex; align-items: center; gap: 12px; }
+  input[type=range] { -webkit-appearance: none; width: 220px; height: 4px; border-radius: 2px; background: #CBD5E1; outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--navy); cursor: pointer; box-shadow: 0 1px 4px rgba(30,39,97,0.3); }
+  .sc-tag { font-size: 13px; font-weight: 500; font-family: monospace; min-width: 110px; color: var(--dark); }
+  .sc-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .metric { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .metric-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .metric-value { font-size: 26px; font-weight: 500; color: var(--dark); line-height: 1; font-family: monospace; letter-spacing: -0.02em; }
+  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
+  .card-head { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px; }
+
+  .skill-row { margin-bottom: 13px; }
+  .skill-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .skill-name { font-size: 13px; color: var(--dark); }
+  .skill-right { display: flex; align-items: center; gap: 6px; }
+  .skill-val { font-size: 13px; font-weight: 500; font-family: monospace; color: var(--dark); }
+  .pill { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-family: monospace; }
+  .pill-up { background: #EAF3DE; color: #27500A; }
+  .pill-dn { background: #FCEBEB; color: #791F1F; }
+  .pill-flat { background: #F1EFE8; color: var(--muted); }
+  .bar-track { height: 7px; background: #EEF2F7; border-radius: 4px; position: relative; overflow: hidden; }
+  .bar-base { position: absolute; top: 0; left: 0; height: 100%; border-radius: 4px; opacity: 0.2; }
+  .bar-fill { position: absolute; top: 0; left: 0; height: 100%; border-radius: 4px; transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+
+  .compare-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .cmp { background: var(--off); border-radius: 10px; padding: 12px 13px; }
+  .cmp-head { font-size: 12px; font-weight: 500; margin-bottom: 10px; }
+  .cmp-sk { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+  .cmp-sk-name { font-size: 10px; color: var(--muted); }
+  .cmp-sk-val { font-size: 10px; font-weight: 500; font-family: monospace; }
+  .mini-bar { height: 3px; background: #E2E8F0; border-radius: 2px; margin-bottom: 6px; overflow: hidden; }
+  .mini-bar-fill { height: 100%; border-radius: 2px; }
+
+  .key-finding { background: #EEEDFE; border: 1px solid #AFA9EC; border-radius: 10px; padding: 12px 16px; margin-top: 16px; font-size: 12px; color: #3C3489; line-height: 1.6; }
+  .key-finding strong { font-weight: 500; }
+
+  footer { text-align: center; padding: 24px; font-size: 11px; color: var(--muted); font-family: monospace; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>California Skills Landscape — Scenario Simulator</h1>
+    <div class="sub">Exhibit 04 · Employment-weighted macro skill shares by sector</div>
+  </div>
+  <span class="badge">BLS OEWS May 2024 + ONET</span>
+</header>
+
+<main>
+  <div class="controls">
+    <div class="ctrl-group">
+      <label>Sector</label>
+      <div class="sector-btns" id="sectorBtns">
+        <button class="s-btn active" data-s="Agriculture">Agriculture</button>
+        <button class="s-btn" data-s="Construction">Construction</button>
+        <button class="s-btn" data-s="Transportation">Transportation</button>
+        <button class="s-btn" data-s="Energy">Energy</button>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <label>AI Adoption Scenario</label>
+      <div class="slider-wrap">
+        <input type="range" id="slider" min="0" max="3" step="1" value="0">
+        <span class="sc-tag" id="scTag"><span class="sc-dot" style="background:#888780"></span>Baseline</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <p class="card-head" id="barsHead">Skill demand — Agriculture · Baseline</p>
+      <div id="skillBars"></div>
+      <div class="key-finding" id="keyFinding"></div>
+    </div>
+    <div class="card">
+      <p class="card-head">All-sector comparison at current scenario</p>
+      <div class="compare-grid" id="compareGrid"></div>
+    </div>
+  </div>
+</main>
+
+<footer>Source: BLS OEWS May 2024 · ONET Macro Skills · California MSA-level analysis · © 2024</footer>
+
+<script>
+const BASE = {
+  Agriculture:    {emp:200400,  Communication:0.3467,Computers:0.1369,Information:0.2021,Machinery:0.1274,Management:0.1870},
+  Construction:   {emp:625920,  Communication:0.3572,Computers:0.1243,Information:0.2056,Machinery:0.1147,Management:0.1981},
+  Transportation: {emp:1357700, Communication:0.3623,Computers:0.1211,Information:0.2109,Machinery:0.1122,Management:0.1935},
+  Energy:         {emp:40960,   Communication:0.3405,Computers:0.1346,Information:0.2101,Machinery:0.1223,Management:0.1924},
+};
+const SCENARIOS=['Baseline','Low adoption','Mid adoption','High adoption'];
+const SC_PARAMS=[[0,0],[0.10,0.08],[0.25,0.20],[0.45,0.38]];
+const SC_COLS=['#888780','#1D9E75','#BA7517','#A32D2D'];
+const SKILLS=['Communication','Computers','Information','Machinery','Management'];
+const SKILL_COLS={Communication:'#185FA5',Computers:'#1D9E75',Information:'#BA7517',Machinery:'#E24B4A',Management:'#7F77DD'};
+const SEC_COLS={Agriculture:'#1D9E75',Construction:'#BA7517',Transportation:'#185FA5',Energy:'#993C1D'};
+const SECTORS=['Agriculture','Construction','Transportation','Energy'];
+
+let activeSec='Agriculture', activeScen=0;
+
+function applyScenario(base, cr, mr) {
+  const r={...base};
+  const lost=r.Computers*cr+r.Machinery*mr;
+  const hum=['Communication','Information','Management'];
+  const hs=hum.reduce((s,k)=>s+r[k],0);
+  r.Computers-=r.Computers*cr; r.Machinery-=r.Machinery*mr;
+  hum.forEach(k=>r[k]+=lost*(r[k]/hs));
+  return r;
+}
+
+function getScen(sec,idx){ const [cr,mr]=SC_PARAMS[idx]; return applyScenario(BASE[sec],cr,mr); }
+
+function render(){
+  const base=BASE[activeSec], cur=getScen(activeSec,activeScen);
+  const [cr,mr]=SC_PARAMS[activeScen];
+  const atRisk=Math.round(base.emp*(cr*base.Computers+mr*base.Machinery)/base.Computers*base.Computers);
+  const totalAtRisk=Math.round(base.emp*(cr*0.12+mr*0.11));
+  const scTag=document.getElementById('scTag');
+  scTag.innerHTML=`<span class="sc-dot" style="background:${SC_COLS[activeScen]}"></span>${SCENARIOS[activeScen]}`;
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Sector</div><div class="metric-value" style="font-size:19px;padding-top:3px">${activeSec}</div><div class="metric-sub">${(base.emp/1000).toFixed(0)}k workers</div></div>
+    <div class="metric"><div class="metric-label">Scenario</div><div class="metric-value" style="font-size:15px;padding-top:6px;color:${SC_COLS[activeScen]}">${SCENARIOS[activeScen]}</div><div class="metric-sub">AI adoption level</div></div>
+    <div class="metric"><div class="metric-label">Communication share</div><div class="metric-value" style="color:#185FA5">${(cur.Communication*100).toFixed(1)}%</div><div class="metric-sub">${activeScen>0?'was '+(base.Communication*100).toFixed(1)+'%':'baseline'}</div></div>
+    <div class="metric"><div class="metric-label">Machinery share</div><div class="metric-value" style="color:#E24B4A">${(cur.Machinery*100).toFixed(1)}%</div><div class="metric-sub">${activeScen>0?'was '+(base.Machinery*100).toFixed(1)+'%':'baseline'}</div></div>
+  `;
+  document.getElementById('barsHead').textContent=`Skill demand — ${activeSec} · ${SCENARIOS[activeScen]}`;
+  const barsEl=document.getElementById('skillBars');
+  barsEl.innerHTML='';
+  const maxShare=0.48;
+  SKILLS.forEach(sk=>{
+    const bv=base[sk],cv=cur[sk],d=cv-bv;
+    const sign=d>0.001?'+':'';
+    const pillCls=d>0.001?'pill-up':d<-0.001?'pill-dn':'pill-flat';
+    const col=SKILL_COLS[sk];
+    barsEl.innerHTML+=`<div class="skill-row">
+      <div class="skill-header">
+        <span class="skill-name">${sk}</span>
+        <div class="skill-right"><span class="skill-val">${(cv*100).toFixed(1)}%</span><span class="pill ${pillCls}">${sign}${(d*100).toFixed(1)}pp</span></div>
+      </div>
+      <div class="bar-track">
+        <div class="bar-base" style="width:${(bv/maxShare*100).toFixed(1)}%;background:${col}"></div>
+        <div class="bar-fill" style="width:${(cv/maxShare*100).toFixed(1)}%;background:${col}"></div>
+      </div></div>`;
+  });
+  const commDelta=((cur.Communication-base.Communication)*100).toFixed(1);
+  const machDelta=((cur.Machinery-base.Machinery)*100).toFixed(1);
+  document.getElementById('keyFinding').innerHTML=activeScen===0
+    ? `<strong>Baseline:</strong> Communication dominates at ${(base.Communication*100).toFixed(1)}% of skill demand. Machinery exposure is ${(base.Machinery*100).toFixed(1)}%.`
+    : `<strong>${SCENARIOS[activeScen]}:</strong> Communication grows +${commDelta}pp. Machinery shrinks ${machDelta}pp. The shift toward human coordination and judgment is ${activeScen===3?'dramatic':'visible'} across all skills.`;
+  const cg=document.getElementById('compareGrid');
+  cg.innerHTML='';
+  SECTORS.forEach(sec=>{
+    const d=getScen(sec,activeScen),col=SEC_COLS[sec];
+    let inner=`<div class="cmp-head" style="color:${col}">${sec}</div>`;
+    SKILLS.forEach(sk=>{
+      inner+=`<div class="cmp-sk"><span class="cmp-sk-name">${sk.slice(0,4)}</span><span class="cmp-sk-val" style="color:${SKILL_COLS[sk]}">${(d[sk]*100).toFixed(1)}%</span></div>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:${(d[sk]/0.48*100).toFixed(0)}%;background:${SKILL_COLS[sk]}"></div></div>`;
+    });
+    cg.innerHTML+=`<div class="cmp">${inner}</div>`;
+  });
+}
+
+document.getElementById('sectorBtns').addEventListener('click',e=>{
+  if(!e.target.dataset.s) return;
+  activeSec=e.target.dataset.s;
+  document.querySelectorAll('.s-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===activeSec));
+  render();
+});
+document.getElementById('slider').addEventListener('input',e=>{activeScen=parseInt(e.target.value);render();});
+render();
+</script>
+</body>
+</html>

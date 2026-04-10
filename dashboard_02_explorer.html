@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>California Skills — Workforce Explorer</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --navy:#1E2761; --ice:#CADCFC; --off:#F4F6FB; --border:rgba(0,0,0,0.08); --muted:#64748B; --dark:#1E293B; }
+body { font-family: -apple-system,'Segoe UI',sans-serif; background:#F0F2F8; color:var(--dark); min-height:100vh; }
+header { background:var(--navy); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; }
+header h1 { color:#fff; font-size:17px; font-weight:500; letter-spacing:-0.01em; }
+header .sub { color:var(--ice); font-size:12px; font-family:monospace; margin-top:2px; }
+.badge { background:rgba(202,220,252,0.18); color:var(--ice); font-size:11px; padding:4px 10px; border-radius:20px; border:1px solid rgba(202,220,252,0.3); font-family:monospace; }
+main { max-width:1200px; margin:0 auto; padding:24px 24px 48px; }
+.ctrl-bar { background:#fff; border-radius:14px; border:1px solid var(--border); padding:16px 22px; margin-bottom:18px; display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
+.v-btn { font-size:13px; padding:7px 16px; border-radius:8px; border:1px solid var(--border); background:var(--off); color:var(--muted); cursor:pointer; transition:all .15s; font-family:inherit; }
+.v-btn.active { background:var(--navy); color:#fff; border-color:var(--navy); font-weight:500; }
+.filter-row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.filter-row span { font-size:11px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.05em; }
+.f-btn { font-size:12px; padding:5px 12px; border-radius:7px; border:1px solid var(--border); background:var(--off); color:var(--muted); cursor:pointer; transition:all .15s; font-family:inherit; }
+.f-btn.active[data-w="High"] { background:#185FA5; color:#fff; border-color:#185FA5; }
+.f-btn.active[data-w="Mid-high"] { background:#1D9E75; color:#fff; border-color:#1D9E75; }
+.f-btn.active[data-w="Mid-low"] { background:#BA7517; color:#fff; border-color:#BA7517; }
+.f-btn.active[data-w="Low"] { background:#D85A30; color:#fff; border-color:#D85A30; }
+.f-btn.active[data-w="all"] { background:var(--navy); color:#fff; border-color:var(--navy); }
+.search-wrap input { font-size:13px; padding:7px 12px; border-radius:8px; border:1px solid var(--border); background:#fff; color:var(--dark); font-family:inherit; width:200px; outline:none; }
+.search-wrap input:focus { border-color:var(--navy); }
+.panels { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.panel { background:#fff; border-radius:14px; border:1px solid var(--border); padding:20px 22px; }
+.panel-head { font-size:11px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
+.leg-row { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; font-size:11px; color:var(--muted); }
+.leg-item { display:flex; align-items:center; gap:5px; }
+.leg-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.chart-outer { position:relative; width:100%; }
+canvas { display:block; width:100%; }
+.tip { position:absolute; background:#fff; border:1px solid var(--border); border-radius:9px; padding:9px 12px; font-size:12px; pointer-events:none; display:none; max-width:240px; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+.tip strong { font-weight:500; display:block; margin-bottom:3px; line-height:1.4; }
+.tip span { color:var(--muted); display:block; line-height:1.6; }
+.axis-lbl { font-size:11px; color:var(--muted); text-align:center; margin-top:3px; }
+.detail { background:var(--off); border-radius:10px; padding:12px 14px; margin-top:10px; min-height:58px; }
+.detail-title { font-size:13px; font-weight:500; margin-bottom:3px; }
+.detail-meta { font-size:12px; color:var(--muted); line-height:1.5; }
+.sec-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.sec-card { background:#fff; border-radius:12px; border:1px solid var(--border); padding:14px 16px; }
+.sec-head { font-size:13px; font-weight:500; margin-bottom:6px; }
+footer { text-align:center; padding:24px; font-size:11px; color:var(--muted); font-family:monospace; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>California Skills Landscape — Workforce Explorer</h1>
+    <div class="sub">Exhibits 01 &amp; 02 · AI exposure, wages &amp; sector breakdown</div>
+  </div>
+  <span class="badge">BLS OEWS May 2024 + ONET · offline</span>
+</header>
+<main>
+  <div class="ctrl-bar">
+    <div style="display:flex;gap:6px">
+      <button class="v-btn active" id="btnAll">All occupations</button>
+      <button class="v-btn" id="btnSec">By sector</button>
+    </div>
+    <div class="filter-row" id="wageRow">
+      <span>Wage tier:</span>
+      <button class="f-btn active" data-w="all">All</button>
+      <button class="f-btn" data-w="High">High &gt;$90k</button>
+      <button class="f-btn" data-w="Mid-high">Mid-high</button>
+      <button class="f-btn" data-w="Mid-low">Mid-low</button>
+      <button class="f-btn" data-w="Low">Low &lt;$43k</button>
+    </div>
+    <div class="search-wrap"><input type="text" id="search" placeholder="Search occupation..."></div>
+  </div>
+
+  <div id="viewAll">
+    <div class="panels">
+      <div class="panel">
+        <p class="panel-head">AI exposure (computers skill share) vs. median wage</p>
+        <div class="leg-row">
+          <span class="leg-item"><span class="leg-dot" style="background:#185FA5"></span>High wage</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#1D9E75"></span>Mid-high</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#BA7517"></span>Mid-low</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#D85A30"></span>Low wage</span>
+          <span style="font-size:11px;color:var(--muted)">· size = employment</span>
+        </div>
+        <div class="chart-outer" id="wo1">
+          <canvas id="c01"></canvas>
+          <div class="tip" id="tp1"><strong id="tp1t" style="color:var(--muted)"></strong><span id="tp1b"></span></div>
+        </div>
+        <div class="axis-lbl">AI exposure — computers skill share (%)</div>
+        <div class="detail"><div class="detail-title" id="dt1" style="color:var(--muted)">Hover a bubble to inspect</div><div class="detail-meta" id="dm1"></div></div>
+      </div>
+      <div class="panel">
+        <p class="panel-head">Machinery / physical automation risk vs. median wage</p>
+        <div class="leg-row"><span style="font-size:11px;color:var(--muted)">Higher X = greater exposure to robotics and physical automation</span></div>
+        <div class="chart-outer" id="wo2">
+          <canvas id="c02"></canvas>
+          <div class="tip" id="tp2"><strong id="tp2t" style="color:var(--muted)"></strong><span id="tp2b"></span></div>
+        </div>
+        <div class="axis-lbl">Machinery / physical automation risk (%)</div>
+        <div class="detail"><div class="detail-title" id="dt2" style="color:var(--muted)">Hover a bubble to inspect</div><div class="detail-meta" id="dm2"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="viewSec" style="display:none">
+    <div class="sec-grid" id="secGrid"></div>
+  </div>
+</main>
+<footer>Source: BLS OEWS May 2024 · ONET Macro Skills · California MSA-level analysis · © 2024</footer>
+
+<script>
+const D=[{"t":"Fast Food and Counter Workers","e":430450,"w":36780,"c":0.1168,"m":0.0906,"b":"Low"},{"t":"Laborers and Freight, Stock, and Material Movers, Hand","e":363120,"w":39200,"c":0.1155,"m":0.1169,"b":"Low"},{"t":"Cashiers","e":338660,"w":35960,"c":0.116,"m":0.069,"b":"Low"},{"t":"Retail Salespersons","e":338560,"w":36280,"c":0.1228,"m":0.0659,"b":"Low"},{"t":"Registered Nurses","e":316600,"w":133455,"c":0.1233,"m":0.0538,"b":"High"},{"t":"Office Clerks, General","e":293500,"w":47180,"c":0.1133,"m":0.0612,"b":"Low"},{"t":"General and Operations Managers","e":273060,"w":104790,"c":0.1206,"m":0.0542,"b":"High"},{"t":"Software Developers","e":264410,"w":134570,"c":0.216,"m":0.0768,"b":"High"},{"t":"Stockers and Order Fillers","e":258950,"w":38760,"c":0.145,"m":0.0808,"b":"Low"},{"t":"Waiters and Waitresses","e":237840,"w":34340,"c":0.1095,"m":0.0731,"b":"Low"},{"t":"Janitors and Cleaners, Except Maids and Housekeeping Cleaners","e":229710,"w":38630,"c":0.1196,"m":0.1095,"b":"Low"},{"t":"Heavy and Tractor-Trailer Truck Drivers","e":203920,"w":59110,"c":0.1094,"m":0.1429,"b":"Mid-low"},{"t":"Security Guards","e":180330,"w":40900,"c":0.1054,"m":0.0776,"b":"Low"},{"t":"Farmworkers and Laborers, Crop, Nursery, and Greenhouse","e":172290,"w":36720,"c":0.1392,"m":0.1298,"b":"Low"},{"t":"Customer Service Representatives","e":168960,"w":46130,"c":0.1332,"m":0.0473,"b":"Low"},{"t":"Accountants and Auditors","e":161800,"w":83070,"c":0.1429,"m":0.0431,"b":"Mid-high"},{"t":"Business Operations Specialists, All Other","e":156680,"w":80220,"c":0.1473,"m":0.0538,"b":"Mid-high"},{"t":"Cooks, Restaurant","e":156580,"w":39300,"c":0.1184,"m":0.0676,"b":"Low"},{"t":"Management Analysts","e":126720,"w":93760,"c":0.1501,"m":0.0436,"b":"Mid-high"},{"t":"Carpenters","e":102990,"w":72230,"c":0.1292,"m":0.104,"b":"Mid-high"},{"t":"Industrial Truck and Tractor Operators","e":99900,"w":46570,"c":0.1214,"m":0.1495,"b":"Low"},{"t":"Sales Managers","e":99030,"w":99750,"c":0.1321,"m":0.0392,"b":"Mid-high"},{"t":"Market Research Analysts and Marketing Specialists","e":98820,"w":71690,"c":0.1587,"m":0.0426,"b":"Mid-high"},{"t":"Managers, All Other","e":96490,"w":143430,"c":0.1355,"m":0.0581,"b":"High"},{"t":"Computer and Information Systems Managers","e":91160,"w":163890,"c":0.1631,"m":0.0713,"b":"High"},{"t":"Financial Managers","e":90750,"w":152090,"c":0.1344,"m":0.042,"b":"High"},{"t":"Lawyers","e":90140,"w":166350,"c":0.1227,"m":0.0385,"b":"High"},{"t":"Construction Laborers","e":81440,"w":58390,"c":0.1153,"m":0.125,"b":"Mid-low"},{"t":"Computer Occupations, All Other","e":78440,"w":98920,"c":0.1721,"m":0.0619,"b":"Mid-high"},{"t":"Electricians","e":68810,"w":75580,"c":0.1275,"m":0.1458,"b":"Mid-high"},{"t":"Computer User Support Specialists","e":65160,"w":69490,"c":0.1469,"m":0.1037,"b":"Mid-high"},{"t":"Police and Sheriff's Patrol Officers","e":63490,"w":109190,"c":0.1183,"m":0.0592,"b":"High"},{"t":"Automotive Service Technicians and Mechanics","e":60260,"w":61280,"c":0.1377,"m":0.1514,"b":"Mid-low"},{"t":"Civil Engineers","e":52250,"w":109250,"c":0.1627,"m":0.0591,"b":"High"},{"t":"Marketing Managers","e":51270,"w":143090,"c":0.1392,"m":0.0405,"b":"High"},{"t":"Computer Systems Analysts","e":49760,"w":109100,"c":0.1792,"m":0.0757,"b":"High"},{"t":"Maintenance and Repair Workers, General","e":125940,"w":51640,"c":0.1294,"m":0.1645,"b":"Mid-low"},{"t":"Packers and Packagers, Hand","e":82780,"w":36210,"c":0.1279,"m":0.0914,"b":"Low"},{"t":"Licensed Practical and Licensed Vocational Nurses","e":77430,"w":76290,"c":0.1234,"m":0.0565,"b":"Mid-high"},{"t":"Compliance Officers","e":44970,"w":81330,"c":0.1356,"m":0.0505,"b":"Mid-high"}];
+
+const S2={Agriculture:[{"t":"Farm Supervisors","e":10050,"w":58845,"c":0.1286,"m":0.1058},{"t":"Ag Inspectors","e":1700,"w":63490,"c":0.1385,"m":0.0652},{"t":"Graders and Sorters","e":6390,"w":36680,"c":0.1203,"m":0.0775},{"t":"Ag Equipment Operators","e":7100,"w":39555,"c":0.1173,"m":0.1595},{"t":"Farmworkers, Crop/Nursery","e":172290,"w":36720,"c":0.1392,"m":0.1298},{"t":"Farmworkers, Animals","e":1900,"w":38595,"c":0.1073,"m":0.1333},{"t":"Forest Workers","e":870,"w":43680,"c":0.1215,"m":0.106},{"t":"Logging Operators","e":100,"w":60000,"c":0.1139,"m":0.1506}],Construction:[{"t":"Construction Supervisors","e":69710,"w":91090,"c":0.1234,"m":0.0898},{"t":"Carpenters","e":102990,"w":72230,"c":0.1292,"m":0.104},{"t":"Construction Laborers","e":81440,"w":58390,"c":0.1153,"m":0.125},{"t":"Electricians","e":68810,"w":75580,"c":0.1275,"m":0.1458},{"t":"Plumbers and Pipefitters","e":44300,"w":63245,"c":0.1413,"m":0.1316},{"t":"Painters","e":36870,"w":55820,"c":0.1178,"m":0.0902},{"t":"Operating Engineers","e":33590,"w":79410,"c":0.117,"m":0.1501},{"t":"Cement Masons","e":28290,"w":62390,"c":0.1222,"m":0.1099},{"t":"Roofers","e":19940,"w":61950,"c":0.1192,"m":0.1004},{"t":"Construction Inspectors","e":13270,"w":91250,"c":0.138,"m":0.0703},{"t":"Solar PV Installers","e":7820,"w":61255,"c":0.139,"m":0.1274},{"t":"Elevator Installers","e":2370,"w":138305,"c":0.1329,"m":0.1667}],Transportation:[{"t":"Airline Pilots","e":9610,"w":200690,"c":0.1214,"m":0.0928},{"t":"Heavy Truck Drivers","e":203920,"w":59110,"c":0.1094,"m":0.1429},{"t":"Light Truck Drivers","e":113830,"w":44400,"c":0.1118,"m":0.1087},{"t":"Industrial Truck Operators","e":99900,"w":46570,"c":0.1214,"m":0.1495},{"t":"Stockers and Order Fillers","e":258950,"w":38760,"c":0.145,"m":0.0808},{"t":"Laborers and Freight","e":363120,"w":39200,"c":0.1155,"m":0.1169},{"t":"Packers and Packagers","e":82780,"w":36210,"c":0.1279,"m":0.0914},{"t":"Bus Drivers, Transit","e":20300,"w":56860,"c":0.118,"m":0.0989},{"t":"Air Traffic Controllers","e":1470,"w":179080,"c":0.1304,"m":0.0628},{"t":"Flight Attendants","e":15250,"w":77870,"c":0.115,"m":0.0672}],Energy:[{"t":"Chemical Engineers","e":1120,"w":135610,"c":0.1784,"m":0.0768},{"t":"Petroleum Engineers","e":970,"w":151240,"c":0.1525,"m":0.0642},{"t":"Environmental Engineers","e":4490,"w":124180,"c":0.1285,"m":0.0519},{"t":"Power-Line Installers","e":9900,"w":127405,"c":0.1362,"m":0.1391},{"t":"Solar PV Installers","e":7820,"w":61255,"c":0.139,"m":0.1274},{"t":"Power Plant Operators","e":1720,"w":105520,"c":0.1378,"m":0.1365},{"t":"Stationary Engineers","e":7410,"w":80530,"c":0.1213,"m":0.1433},{"t":"Petroleum Refinery Ops","e":3410,"w":94470,"c":0.1347,"m":0.1266},{"t":"Wind Turbine Techs","e":130,"w":83645,"c":0.1339,"m":0.1651}]};
+
+const WC={'High':'#185FA5','Mid-high':'#1D9E75','Mid-low':'#BA7517','Low':'#D85A30'};
+const WA={'High':'rgba(24,95,165,.62)','Mid-high':'rgba(29,158,117,.62)','Mid-low':'rgba(186,117,23,.62)','Low':'rgba(216,90,48,.62)'};
+const SC={Agriculture:'#1D9E75',Construction:'#BA7517',Transportation:'#185FA5',Energy:'#993C1D'};
+const SA={Agriculture:'rgba(29,158,117,.65)',Construction:'rgba(186,117,23,.65)',Transportation:'rgba(24,95,165,.65)',Energy:'rgba(153,60,29,.65)'};
+
+let aWage='all', aSearch='';
+
+function filt(){ return D.filter(d=>(aWage==='all'||d.b===aWage)&&(!aSearch||d.t.toLowerCase().includes(aSearch.toLowerCase()))); }
+
+function bubble(cid,wid,tipId,tTId,tBId,xk,dtId,dmId){
+  const cvs=document.getElementById(cid), wrap=document.getElementById(wid);
+  const dpr=window.devicePixelRatio||1, W=wrap.clientWidth, H=320;
+  cvs.width=W*dpr; cvs.height=H*dpr; cvs.style.height=H+'px';
+  const c=cvs.getContext('2d'); c.scale(dpr,dpr);
+  const data=filt(); if(!data.length){c.clearRect(0,0,W,H);return;}
+  const maxE=Math.max(...data.map(d=>d.e));
+  const P={l:46,r:14,t:12,b:30}, CW=W-P.l-P.r, CH=H-P.t-P.b;
+  const xs=data.map(d=>d[xk]*100), ys=data.map(d=>d.w);
+  const x0=Math.min(...xs)-.4, x1=Math.max(...xs)+.4;
+  const y0=Math.max(0,Math.min(...ys)-8000), y1=Math.max(...ys)+18000;
+  const px=v=>P.l+(v-x0)/(x1-x0)*CW, py=v=>P.t+(1-(v-y0)/(y1-y0))*CH;
+  c.clearRect(0,0,W,H);
+  c.strokeStyle='rgba(0,0,0,0.05)'; c.lineWidth=.5;
+  for(let i=0;i<=5;i++){const v=x0+i*(x1-x0)/5,x=px(v);c.beginPath();c.moveTo(x,P.t);c.lineTo(x,P.t+CH);c.stroke();c.fillStyle='#999';c.font='9px sans-serif';c.textAlign='center';c.fillText(v.toFixed(1)+'%',x,P.t+CH+14);}
+  for(let i=0;i<=4;i++){const v=y0+i*(y1-y0)/4,y=py(v);c.beginPath();c.moveTo(P.l,y);c.lineTo(P.l+CW,y);c.stroke();c.fillStyle='#999';c.font='9px sans-serif';c.textAlign='right';c.fillText('$'+Math.round(v/1000)+'k',P.l-4,y+3);}
+  const pts=[];
+  [...data].sort((a,b)=>b.e-a.e).forEach(d=>{
+    const r=Math.max(4,Math.sqrt(d.e/maxE)*36), cx=px(d[xk]*100), cy=py(d.w);
+    c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.fillStyle=WA[d.b];c.fill();c.strokeStyle=WC[d.b];c.lineWidth=.8;c.stroke();
+    if(r>20){const s=d.t.split(',')[0].split(' ').slice(0,2).join(' ');c.fillStyle='rgba(255,255,255,.92)';c.font='bold 7.5px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(s,cx,cy);}
+    pts.push({cx,cy,r,d});
+  });
+  cvs.onmousemove=e=>{
+    const rect=cvs.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    let hit=null; for(let i=pts.length-1;i>=0;i--){const p=pts[i];if(Math.hypot(mx-p.cx,my-p.cy)<=p.r){hit=p;break;}}
+    const tip=document.getElementById(tipId);
+    if(!hit){tip.style.display='none';cvs.style.cursor='default';document.getElementById(dtId).style.color='var(--muted)';document.getElementById(dtId).textContent='Hover a bubble to inspect';document.getElementById(dmId).textContent='';return;}
+    cvs.style.cursor='pointer'; tip.style.display='block';
+    document.getElementById(tTId).textContent=hit.d.t; document.getElementById(tTId).style.color=WC[hit.d.b];
+    document.getElementById(tBId).innerHTML=`Employment: ${hit.d.e.toLocaleString()}<br>Median wage: $${Math.round(hit.d.w/1000)}k<br>${xk==='c'?'AI':'Machinery'} exposure: ${(hit.d[xk]*100).toFixed(1)}%<br>Tier: ${hit.d.b}`;
+    let lx=e.clientX-rect.left+12, ly=e.clientY-rect.top-10;
+    if(lx+245>W) lx=e.clientX-rect.left-245;
+    tip.style.left=lx+'px'; tip.style.top=ly+'px';
+    document.getElementById(dtId).style.color=WC[hit.d.b]; document.getElementById(dtId).textContent=hit.d.t;
+    document.getElementById(dmId).textContent=`Employment: ${hit.d.e.toLocaleString()} · Wage: $${Math.round(hit.d.w/1000)}k · ${xk==='c'?'AI':'Machinery'} exposure: ${(hit.d[xk]*100).toFixed(1)}% · Tier: ${hit.d.b}`;
+  };
+  cvs.onmouseleave=()=>{document.getElementById(tipId).style.display='none';cvs.style.cursor='default';document.getElementById(dtId).style.color='var(--muted)';document.getElementById(dtId).textContent='Hover a bubble to inspect';document.getElementById(dmId).textContent='';};
+}
+
+function secBubble(cid,wid,pts,col,alpha){
+  const cvs=document.getElementById(cid); if(!cvs)return;
+  const wrap=document.getElementById(wid), dpr=window.devicePixelRatio||1;
+  const W=wrap.clientWidth, H=220;
+  cvs.width=W*dpr; cvs.height=H*dpr; cvs.style.height=H+'px';
+  const c=cvs.getContext('2d'); c.scale(dpr,dpr);
+  const maxE=Math.max(...pts.map(p=>p.e));
+  const xs=pts.map(p=>p.c*100), ys=pts.map(p=>p.w);
+  const x0=Math.min(...xs)-.3, x1=Math.max(...xs)+.3;
+  const y0=Math.max(0,Math.min(...ys)-6000), y1=Math.max(...ys)+12000;
+  const P={l:38,r:10,t:8,b:26}, CW=W-P.l-P.r, CH=H-P.t-P.b;
+  const px=v=>P.l+(v-x0)/(x1-x0)*CW, py=v=>P.t+(1-(v-y0)/(y1-y0))*CH;
+  c.clearRect(0,0,W,H);
+  c.strokeStyle='rgba(0,0,0,0.05)'; c.lineWidth=.4;
+  [2,3,4].forEach(i=>{const v=x0+i*(x1-x0)/5,x=px(v);c.beginPath();c.moveTo(x,P.t);c.lineTo(x,P.t+CH);c.stroke();c.fillStyle='#aaa';c.font='8px sans-serif';c.textAlign='center';c.fillText(v.toFixed(1)+'%',x,P.t+CH+14);});
+  [1,2,3].forEach(i=>{const v=y0+i*(y1-y0)/3,y=py(v);c.beginPath();c.moveTo(P.l,y);c.lineTo(P.l+CW,y);c.stroke();c.fillStyle='#aaa';c.font='8px sans-serif';c.textAlign='right';c.fillText('$'+Math.round(v/1000)+'k',P.l-3,y+3);});
+  const dr=[];
+  [...pts].sort((a,b)=>b.e-a.e).forEach(p=>{
+    const r=Math.max(4,(p.e/maxE)**0.48*26), cx=px(p.c*100), cy=py(p.w);
+    c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.fillStyle=alpha;c.fill();c.strokeStyle=col;c.lineWidth=.6;c.stroke();
+    if(r>13){const s=p.t.split(',')[0].split(' ').slice(0,2).join(' ');c.fillStyle='rgba(255,255,255,.9)';c.font='bold 6.5px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(s,cx,cy);}
+    dr.push({cx,cy,r,p});
+  });
+  cvs.onmousemove=e=>{
+    const rect=cvs.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    let hit=null; for(let i=dr.length-1;i>=0;i--){const p=dr[i];if(Math.hypot(mx-p.cx,my-p.cy)<=p.r){hit=p;break;}}
+    cvs.title=hit?`${hit.p.t}\nEmp: ${hit.p.e>0?hit.p.e.toLocaleString():'<500'} · Wage: $${Math.round(hit.p.w/1000)}k · AI: ${(hit.p.c*100).toFixed(1)}%`:'';
+    cvs.style.cursor=hit?'pointer':'default';
+  };
+  cvs.onmouseleave=()=>{cvs.style.cursor='default';};
+}
+
+function buildAll(){
+  bubble('c01','wo1','tp1','tp1t','tp1b','c','dt1','dm1');
+  bubble('c02','wo2','tp2','tp2t','tp2b','m','dt2','dm2');
+}
+
+function buildSectors(){
+  const el=document.getElementById('secGrid'); el.innerHTML='';
+  Object.entries(S2).forEach(([sec,pts])=>{
+    const id='sc_'+sec, wid='scw_'+sec;
+    el.innerHTML+=`<div class="sec-card"><p class="sec-head" style="color:${SC[sec]}">${sec} <span style="font-size:11px;font-weight:400;color:var(--muted)">· hover bubbles for details</span></p><div id="${wid}" style="width:100%"><canvas id="${id}"></canvas></div><div style="font-size:11px;color:var(--muted);text-align:center;margin-top:3px">AI exposure (%)</div></div>`;
+  });
+  setTimeout(()=>{ Object.entries(S2).forEach(([sec,pts])=>secBubble('sc_'+sec,'scw_'+sec,pts,SC[sec],SA[sec])); },60);
+}
+
+document.getElementById('btnAll').onclick=()=>{
+  document.getElementById('viewAll').style.display=''; document.getElementById('viewSec').style.display='none';
+  document.getElementById('btnAll').classList.add('active'); document.getElementById('btnSec').classList.remove('active');
+  document.getElementById('wageRow').style.display='flex'; document.querySelector('.search-wrap').style.display='';
+  buildAll();
+};
+document.getElementById('btnSec').onclick=()=>{
+  document.getElementById('viewAll').style.display='none'; document.getElementById('viewSec').style.display='';
+  document.getElementById('btnSec').classList.add('active'); document.getElementById('btnAll').classList.remove('active');
+  document.getElementById('wageRow').style.display='none'; document.querySelector('.search-wrap').style.display='none';
+  buildSectors();
+};
+document.querySelectorAll('.f-btn').forEach(b=>b.addEventListener('click',()=>{
+  aWage=b.dataset.w; document.querySelectorAll('.f-btn').forEach(x=>x.classList.toggle('active',x.dataset.w===aWage)); buildAll();
+}));
+document.getElementById('search').addEventListener('input',e=>{aSearch=e.target.value; buildAll();});
+window.addEventListener('resize',()=>{ if(document.getElementById('viewAll').style.display!=='none') buildAll(); else buildSectors(); });
+buildAll();
+</script>
+</body>
+</html>

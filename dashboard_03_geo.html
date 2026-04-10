@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>California Skills — Geographic & Displacement</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --navy:#1E2761; --ice:#CADCFC; --off:#F4F6FB; --border:rgba(0,0,0,0.08); --muted:#64748B; --dark:#1E293B; }
+  body { font-family: -apple-system,'Segoe UI',sans-serif; background: #F0F2F8; color: var(--dark); min-height: 100vh; }
+  header { background: var(--navy); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { color: #fff; font-size: 17px; font-weight: 500; }
+  header .sub { color: var(--ice); font-size: 12px; font-family: monospace; margin-top: 2px; }
+  .badge { background: rgba(202,220,252,0.18); color: var(--ice); font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(202,220,252,0.3); font-family: monospace; }
+  main { max-width: 1200px; margin: 0 auto; padding: 24px 24px 48px; }
+  .ctrl-bar { background: #fff; border-radius: 14px; border: 1px solid var(--border); padding: 16px 22px; margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .mode-btns, .sec-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .m-btn, .s-btn { font-size: 13px; font-family: -apple-system,'Segoe UI',sans-serif; padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--off); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .m-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); font-weight: 500; }
+  .s-btn.active[data-sec="Agriculture"] { background: #1D9E75; color: #fff; border-color: #1D9E75; }
+  .s-btn.active[data-sec="Construction"] { background: #BA7517; color: #fff; border-color: #BA7517; }
+  .s-btn.active[data-sec="Transportation"] { background: #185FA5; color: #fff; border-color: #185FA5; }
+  .s-btn.active[data-sec="Energy"] { background: #993C1D; color: #fff; border-color: #993C1D; }
+  .divider { width: 1px; height: 28px; background: var(--border); }
+  .layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.45fr); gap: 16px; }
+  .card { background: #fff; border-radius: 14px; border: 1px solid var(--border); padding: 18px 20px; }
+  .card-head { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .map-bg { background: #EEF2F8; border-radius: 10px; position: relative; overflow: hidden; }
+  .map-tip { position: absolute; background: #fff; border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; font-size: 12px; pointer-events: none; display: none; max-width: 200px; z-index: 10; color: var(--dark); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .map-tip strong { font-weight: 500; display: block; margin-bottom: 3px; }
+  .map-tip span { color: var(--muted); display: block; line-height: 1.6; }
+  .leg { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--muted); margin-top: 10px; align-items: center; }
+  .leg-item { display: flex; align-items: center; gap: 4px; }
+  .leg-sq { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+  .rank-scroll { overflow-y: auto; max-height: 360px; }
+  .rank-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: background 0.12s; }
+  .rank-row:hover, .rank-row.sel { background: var(--off); }
+  .rank-name { font-size: 12px; color: var(--dark); min-width: 155px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .rank-track { flex: 1; height: 6px; background: #EEF2F7; border-radius: 3px; overflow: hidden; }
+  .rank-bar { height: 100%; border-radius: 3px; }
+  .rank-val { font-size: 11px; font-family: monospace; color: var(--muted); min-width: 40px; text-align: right; flex-shrink: 0; }
+  .detail { background: var(--off); border-radius: 10px; padding: 14px 16px; margin-top: 12px; }
+  .det-title { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
+  .stacked { display: flex; height: 14px; border-radius: 4px; overflow: hidden; margin-bottom: 5px; }
+  .stacked-labels { display: flex; justify-content: space-between; font-size: 10px; font-family: monospace; color: var(--muted); }
+  footer { text-align: center; padding: 24px; font-size: 11px; color: var(--muted); font-family: monospace; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>California Skills Landscape — Geographic & Displacement</h1>
+    <div class="sub">Exhibits 03 & 05 · MSA employment concentration and transition pressure</div>
+  </div>
+  <span class="badge">BLS OEWS May 2024 + ONET</span>
+</header>
+
+<main>
+  <div class="ctrl-bar">
+    <div class="mode-btns">
+      <button class="m-btn active" id="mEmp">Sector employment</button>
+      <button class="m-btn" id="mRisk">Displacement pressure</button>
+    </div>
+    <div class="divider"></div>
+    <div class="sec-btns" id="secBtns">
+      <button class="s-btn active" data-sec="Agriculture">Agriculture</button>
+      <button class="s-btn" data-sec="Construction">Construction</button>
+      <button class="s-btn" data-sec="Transportation">Transportation</button>
+      <button class="s-btn" data-sec="Energy">Energy</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="card">
+      <p class="card-head" id="mapHead">Sector employment — Agriculture</p>
+      <div class="map-bg">
+        <canvas id="mapC" style="width:100%;display:block"></canvas>
+        <div class="map-tip" id="mapTip"><strong id="tipN"></strong><span id="tipB"></span></div>
+      </div>
+      <div class="leg" id="mapLeg"></div>
+    </div>
+    <div class="card">
+      <p class="card-head" id="rankHead">Agriculture employment by MSA</p>
+      <div class="rank-scroll" id="rankList"></div>
+      <div class="detail">
+        <p class="det-title" id="detTitle" style="color:var(--muted)">Click an MSA to inspect</p>
+        <div class="stacked" id="stackBar"></div>
+        <div class="stacked-labels"><span id="sl1"></span><span id="sl2"></span><span id="sl3"></span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>Source: BLS OEWS May 2024 · ONET Macro Skills · California MSA-level analysis · © 2024</footer>
+
+<script>
+const LAT_MIN=32.4,LAT_MAX=41.0,LNG_MIN=-124.5,LNG_MAX=-114.1;
+function proj(lat,lng,W,H){return[(lng-LNG_MIN)/(LNG_MAX-LNG_MIN)*W,(1-(lat-LAT_MIN)/(LAT_MAX-LAT_MIN))*H];}
+
+const SEC_EMP={
+Agriculture:[{n:'Salinas',e:30750,c:0.1224,lat:36.68,lng:-121.66},{n:'Bakersfield',e:36930,c:0.1252,lat:35.37,lng:-119.02},{n:'Fresno',e:30810,c:0.1252,lat:36.74,lng:-119.79},{n:'Visalia',e:24160,c:0.1252,lat:36.33,lng:-119.29},{n:'Santa Maria-SB',e:13110,c:0.1225,lat:34.95,lng:-120.44},{n:'Riverside-SB',e:6340,c:0.1247,lat:33.98,lng:-117.37},{n:'Modesto',e:5580,c:0.1252,lat:37.64,lng:-120.99},{n:'Merced',e:4670,c:0.1225,lat:37.30,lng:-120.48},{n:'Napa',e:4550,c:0.1284,lat:38.30,lng:-122.29},{n:'Sacramento',e:4840,c:0.1247,lat:38.58,lng:-121.49},{n:'San Luis Obispo',e:4060,c:0.1262,lat:35.28,lng:-120.66},{n:'Oxnard-Ventura',e:5840,c:0.1228,lat:34.27,lng:-119.23},{n:'Los Angeles',e:4260,c:0.1266,lat:34.05,lng:-118.24},{n:'Stockton',e:6100,c:0.1288,lat:37.96,lng:-121.29},{n:'San Jose',e:1550,c:0.1239,lat:37.34,lng:-121.89},{n:'SF Bay',e:1660,c:0.1274,lat:37.77,lng:-122.42},{n:'El Centro',e:3740,c:0.1284,lat:32.79,lng:-115.56},{n:'Hanford',e:3530,c:0.1263,lat:36.33,lng:-119.65},{n:'Chico',e:590,c:0.1294,lat:39.73,lng:-121.84},{n:'Santa Cruz',e:480,c:0.1339,lat:36.97,lng:-122.03},{n:'Yuba City',e:1160,c:0.1263,lat:39.14,lng:-121.62},{n:'Redding',e:210,c:0.1272,lat:40.59,lng:-122.39},{n:'Vallejo',e:210,c:0.1282,lat:38.10,lng:-122.26},{n:'Santa Rosa',e:3160,c:0.1231,lat:38.44,lng:-122.71},{n:'San Diego',e:2110,c:0.1289,lat:32.72,lng:-117.16}],
+Construction:[{n:'Los Angeles',e:182990,c:0.121,lat:34.05,lng:-118.24},{n:'Riverside-SB',e:82220,c:0.1214,lat:33.98,lng:-117.37},{n:'SF Bay',e:86510,c:0.1213,lat:37.77,lng:-122.42},{n:'Sacramento',e:53700,c:0.1221,lat:38.58,lng:-121.49},{n:'San Diego',e:64270,c:0.1217,lat:32.72,lng:-117.16},{n:'San Jose',e:36750,c:0.1225,lat:37.34,lng:-121.89},{n:'Fresno',e:17010,c:0.1221,lat:36.74,lng:-119.79},{n:'Bakersfield',e:12920,c:0.1201,lat:35.37,lng:-119.02},{n:'Oxnard-Ventura',e:12780,c:0.1227,lat:34.27,lng:-119.23},{n:'Santa Rosa',e:10910,c:0.1238,lat:38.44,lng:-122.71},{n:'Stockton',e:10380,c:0.1224,lat:37.96,lng:-121.29},{n:'Modesto',e:7530,c:0.1223,lat:37.64,lng:-120.99},{n:'Vallejo',e:7280,c:0.1233,lat:38.10,lng:-122.26},{n:'Santa Maria-SB',e:7550,c:0.1236,lat:34.95,lng:-120.44},{n:'San Luis Obispo',e:5870,c:0.1239,lat:35.28,lng:-120.66},{n:'Salinas',e:5400,c:0.1248,lat:36.68,lng:-121.66},{n:'Santa Cruz',e:3430,c:0.1254,lat:36.97,lng:-122.03},{n:'Merced',e:2210,c:0.1245,lat:37.30,lng:-120.48},{n:'Napa',e:2660,c:0.125,lat:38.30,lng:-122.29},{n:'Chico',e:2880,c:0.1243,lat:39.73,lng:-121.84},{n:'Redding',e:2920,c:0.1243,lat:40.59,lng:-122.39},{n:'Hanford',e:790,c:0.124,lat:36.33,lng:-119.65},{n:'El Centro',e:1270,c:0.1252,lat:32.79,lng:-115.56},{n:'Yuba City',e:1640,c:0.1232,lat:39.14,lng:-121.62},{n:'Visalia',e:4050,c:0.1229,lat:36.33,lng:-119.29}],
+Transportation:[{n:'Los Angeles',e:475300,c:0.12,lat:34.05,lng:-118.24},{n:'Riverside-SB',e:244100,c:0.1191,lat:33.98,lng:-117.37},{n:'SF Bay',e:143690,c:0.1191,lat:37.77,lng:-122.42},{n:'Sacramento',e:73140,c:0.1183,lat:38.58,lng:-121.49},{n:'San Diego',e:93280,c:0.1179,lat:32.72,lng:-117.16},{n:'San Jose',e:46600,c:0.1178,lat:37.34,lng:-121.89},{n:'Stockton',e:53150,c:0.1158,lat:37.96,lng:-121.29},{n:'Fresno',e:41710,c:0.1154,lat:36.74,lng:-119.79},{n:'Oxnard-Ventura',e:22300,c:0.1153,lat:34.27,lng:-119.23},{n:'Modesto',e:19530,c:0.1179,lat:37.64,lng:-120.99},{n:'Salinas',e:14960,c:0.1189,lat:36.68,lng:-121.66},{n:'Bakersfield',e:32610,c:0.1158,lat:35.37,lng:-119.02},{n:'Visalia',e:17320,c:0.1179,lat:36.33,lng:-119.29},{n:'Santa Rosa',e:12020,c:0.12,lat:38.44,lng:-122.71},{n:'Vallejo',e:11330,c:0.1156,lat:38.10,lng:-122.26},{n:'Merced',e:7780,c:0.1175,lat:37.30,lng:-120.48},{n:'Napa',e:4740,c:0.1154,lat:38.30,lng:-122.29},{n:'Chico',e:4570,c:0.1168,lat:39.73,lng:-121.84},{n:'El Centro',e:4690,c:0.1164,lat:32.79,lng:-115.56},{n:'Redding',e:4790,c:0.1164,lat:40.59,lng:-122.39},{n:'Santa Cruz',e:5720,c:0.1175,lat:36.97,lng:-122.03},{n:'Santa Maria-SB',e:10620,c:0.1184,lat:34.95,lng:-120.44},{n:'San Luis Obispo',e:5610,c:0.1176,lat:35.28,lng:-120.66},{n:'Hanford',e:3620,c:0.1164,lat:36.33,lng:-119.65},{n:'Yuba City',e:4520,c:0.1186,lat:39.14,lng:-121.62}],
+Energy:[{n:'Los Angeles',e:13210,c:0.1373,lat:34.05,lng:-118.24},{n:'SF Bay',e:6090,c:0.1387,lat:37.77,lng:-122.42},{n:'Riverside-SB',e:4820,c:0.1385,lat:33.98,lng:-117.37},{n:'Sacramento',e:4280,c:0.1401,lat:38.58,lng:-121.49},{n:'San Diego',e:3770,c:0.1385,lat:32.72,lng:-117.16},{n:'Bakersfield',e:1940,c:0.1406,lat:35.37,lng:-119.02},{n:'San Jose',e:1560,c:0.1407,lat:37.34,lng:-121.89},{n:'Vallejo',e:1050,c:0.1328,lat:38.10,lng:-122.26},{n:'Oxnard-Ventura',e:720,c:0.1366,lat:34.27,lng:-119.23},{n:'Fresno',e:940,c:0.1341,lat:36.74,lng:-119.79},{n:'San Luis Obispo',e:550,c:0.1312,lat:35.28,lng:-120.66},{n:'Stockton',e:280,c:0.1331,lat:37.96,lng:-121.29},{n:'Santa Maria-SB',e:210,c:0.1287,lat:34.95,lng:-120.44},{n:'Modesto',e:210,c:0.1321,lat:37.64,lng:-120.99},{n:'El Centro',e:160,c:0.1318,lat:32.79,lng:-115.56},{n:'Redding',e:160,c:0.1287,lat:40.59,lng:-122.39},{n:'Napa',e:110,c:0.1213,lat:38.30,lng:-122.29},{n:'Santa Cruz',e:110,c:0.1338,lat:36.97,lng:-122.03},{n:'Santa Rosa',e:450,c:0.1312,lat:38.44,lng:-122.71},{n:'Salinas',e:190,c:0.1296,lat:36.68,lng:-121.66},{n:'Visalia',e:100,c:0.1316,lat:36.33,lng:-119.29},{n:'Chico',e:50,c:0.139,lat:39.73,lng:-121.84}]
+};
+
+const RISK=[{n:'Salinas',tp:51300,hi:63.1,me:8.9,lo:28.0,he:32370,lat:36.68,lng:-121.66},{n:'Visalia',tp:45630,hi:58.5,me:12.5,lo:29.1,he:26680,lat:36.33,lng:-119.29},{n:'Bakersfield',tp:83950,hi:53.8,me:14.1,lo:32.1,he:45170,lat:35.37,lng:-119.02},{n:'Hanford',tp:7940,hi:49.7,me:15.5,lo:34.8,he:3950,lat:36.33,lng:-119.65},{n:'El Centro',tp:9860,hi:48.5,me:17.1,lo:34.4,he:4780,lat:32.79,lng:-115.56},{n:'Santa Maria-SB',tp:31490,hi:47.7,me:13.3,lo:39.0,he:15010,lat:34.95,lng:-120.44},{n:'Napa',tp:12060,hi:45.5,me:14.9,lo:39.6,he:5490,lat:38.30,lng:-122.29},{n:'Fresno',tp:90210,hi:43.8,me:15.3,lo:41.0,he:39480,lat:36.74,lng:-119.79},{n:'Merced',tp:14660,hi:39.6,me:17.8,lo:42.6,he:5810,lat:37.30,lng:-120.48},{n:'San Luis Obispo',tp:15990,hi:38.5,me:16.5,lo:45.0,he:6150,lat:35.28,lng:-120.66},{n:'Modesto',tp:32760,hi:31.4,me:17.6,lo:51.0,he:10280,lat:37.64,lng:-120.99},{n:'Oxnard-Ventura',tp:41510,hi:27.0,me:15.7,lo:57.3,he:11190,lat:34.27,lng:-119.23},{n:'Stockton',tp:69910,hi:26.0,me:19.3,lo:54.7,he:18170,lat:37.96,lng:-121.29},{n:'Santa Rosa',tp:26420,hi:25.9,me:16.1,lo:58.1,he:6830,lat:38.44,lng:-122.71},{n:'Yuba City',tp:7320,hi:24.6,me:32.9,lo:42.5,he:1800,lat:39.14,lng:-121.62},{n:'Chico',tp:8040,hi:20.6,me:18.7,lo:60.7,he:1660,lat:39.73,lng:-121.84},{n:'Riverside-SB',tp:336360,hi:20.3,me:18.4,lo:61.3,he:68270,lat:33.98,lng:-117.37},{n:'Vallejo',tp:19740,hi:19.8,me:21.3,lo:58.9,he:3910,lat:38.10,lng:-122.26},{n:'Santa Cruz',tp:9670,hi:19.3,me:14.8,lo:65.9,he:1870,lat:36.97,lng:-122.03},{n:'Redding',tp:8080,hi:19.1,me:22.0,lo:58.9,he:1540,lat:40.59,lng:-122.39},{n:'Sacramento',tp:135140,hi:19.1,me:17.7,lo:63.3,he:25760,lat:38.58,lng:-121.49},{n:'San Jose',tp:86020,hi:17.6,me:15.3,lo:67.2,he:15110,lat:37.34,lng:-121.89},{n:'San Diego',tp:162400,hi:16.9,me:15.4,lo:67.7,he:27480,lat:32.72,lng:-117.16},{n:'SF Bay',tp:236760,hi:16.6,me:16.5,lo:67.0,he:39270,lat:37.77,lng:-122.42},{n:'Los Angeles',tp:673490,hi:14.4,me:16.1,lo:69.5,he:97080,lat:34.05,lng:-118.24}];
+
+const SEC_COL={Agriculture:'#1D9E75',Construction:'#BA7517',Transportation:'#185FA5',Energy:'#993C1D'};
+function rCol(p){return p>=40?'#A32D2D':p>=20?'#E24B4A':'#F09595';}
+function rAlpha(p,a){return p>=40?`rgba(163,45,45,${a})`:p>=20?`rgba(226,75,74,${a})`:`rgba(240,149,149,${a})`;}
+
+let mode='emp', activeSec='Agriculture', selMSA=null;
+const canvas=document.getElementById('mapC'), ctx=canvas.getContext('2d');
+let drawn=[];
+
+function drawMap(){
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.clientWidth;
+  const H=Math.round(W*1.22);
+  canvas.width=W*dpr; canvas.height=H*dpr; canvas.style.height=H+'px';
+  ctx.scale(dpr,dpr); ctx.clearRect(0,0,W,H);
+  drawn=[];
+  if(mode==='emp'){
+    const data=SEC_EMP[activeSec], maxE=Math.max(...data.map(d=>d.e));
+    const col=SEC_COL[activeSec];
+    [...data].sort((a,b)=>b.e-a.e).forEach(d=>{
+      const [x,y]=proj(d.lat,d.lng,W,H), r=Math.max(5,(d.e/maxE)**0.45*44);
+      const sel=selMSA&&selMSA.n===d.n;
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fillStyle=col+(sel?'EE':'99'); ctx.fill();
+      ctx.strokeStyle=col; ctx.lineWidth=sel?2:0.6; ctx.stroke();
+      if(r>14){ctx.fillStyle='rgba(255,255,255,.92)';ctx.font=`500 9px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d.n.split('-')[0].split(',')[0],x,y);}
+      drawn.push({x,y,r,d});
+    });
+  } else {
+    const maxE=Math.max(...RISK.map(d=>d.he));
+    [...RISK].sort((a,b)=>b.he-a.he).forEach(d=>{
+      const [x,y]=proj(d.lat,d.lng,W,H), r=Math.max(6,(d.he/maxE)**0.45*46);
+      const sel=selMSA&&selMSA.n===d.n;
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fillStyle=rAlpha(d.hi,sel?0.9:0.7); ctx.fill();
+      ctx.strokeStyle=rCol(d.hi); ctx.lineWidth=sel?2:0.7; ctx.stroke();
+      if(r>16){ctx.fillStyle='rgba(255,255,255,.92)';ctx.font=`500 9px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d.n.split('-')[0],x,y);}
+      drawn.push({x,y,r,d});
+    });
+  }
+}
+
+function handleHover(e){
+  const rect=canvas.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  let hit=null;
+  for(let i=drawn.length-1;i>=0;i--){const c=drawn[i];if(Math.hypot(mx-c.x,my-c.y)<=c.r){hit=c;break;}}
+  const tip=document.getElementById('mapTip');
+  if(!hit){tip.style.display='none';canvas.style.cursor='default';return;}
+  canvas.style.cursor='pointer'; tip.style.display='block';
+  document.getElementById('tipN').textContent=hit.d.n;
+  if(mode==='emp') document.getElementById('tipB').innerHTML=`Employment: ${hit.d.e.toLocaleString()}<br>AI exposure: ${(hit.d.c*100).toFixed(1)}%`;
+  else document.getElementById('tipB').innerHTML=`At-risk workers: ${hit.d.he.toLocaleString()}<br>Displacement share: ${hit.d.hi}%<br>Total sector workers: ${hit.d.tp.toLocaleString()}`;
+  let lx=e.clientX-rect.left+12, ly=e.clientY-rect.top-10;
+  if(lx+215>canvas.clientWidth) lx=e.clientX-rect.left-215;
+  tip.style.left=lx+'px'; tip.style.top=ly+'px';
+}
+canvas.addEventListener('mousemove',handleHover);
+canvas.addEventListener('mouseleave',()=>{document.getElementById('mapTip').style.display='none';});
+canvas.addEventListener('click',e=>{
+  const rect=canvas.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  for(let i=drawn.length-1;i>=0;i--){const c=drawn[i];if(Math.hypot(mx-c.x,my-c.y)<=c.r){selMSA=c.d;updateDetail(c.d);buildRank();drawMap();return;}}
+});
+
+function updateDetail(d){
+  if(!d){document.getElementById('detTitle').textContent='Click an MSA to inspect';document.getElementById('detTitle').style.color='var(--muted)';document.getElementById('stackBar').innerHTML='';document.getElementById('sl1').textContent='';document.getElementById('sl2').textContent='';document.getElementById('sl3').textContent='';return;}
+  if(mode==='emp'){
+    const col=SEC_COL[activeSec];
+    document.getElementById('detTitle').textContent=`${d.n} — ${activeSec}`;document.getElementById('detTitle').style.color=col;
+    document.getElementById('stackBar').innerHTML=`<div style="width:100%;height:14px;background:${col};border-radius:4px"></div>`;
+    document.getElementById('sl1').textContent=`${d.e.toLocaleString()} workers`;
+    document.getElementById('sl2').textContent=`AI exposure: ${(d.c*100).toFixed(1)}%`; document.getElementById('sl3').textContent='';
+  } else {
+    const rd=RISK.find(r=>r.n===d.n)||d;
+    document.getElementById('detTitle').textContent=`${d.n} — displacement breakdown`; document.getElementById('detTitle').style.color=rCol(rd.hi);
+    document.getElementById('stackBar').innerHTML=`<div style="width:${rd.hi}%;background:#A32D2D;height:100%"></div><div style="width:${rd.me}%;background:#EF9F27;height:100%"></div><div style="width:${rd.lo}%;background:#1D9E75;height:100%"></div>`;
+    document.getElementById('sl1').textContent=`High ${rd.hi}%`; document.getElementById('sl2').textContent=`Mid ${rd.me}%`; document.getElementById('sl3').textContent=`Low ${rd.lo}%`;
+  }
+}
+
+function buildRank(){
+  const el=document.getElementById('rankList'); el.innerHTML='';
+  if(mode==='emp'){
+    const data=[...SEC_EMP[activeSec]].sort((a,b)=>b.e-a.e);
+    const maxE=Math.max(...data.map(d=>d.e)), col=SEC_COL[activeSec];
+    data.forEach(d=>{
+      const row=document.createElement('div'); row.className='rank-row'+(selMSA&&selMSA.n===d.n?' sel':'');
+      row.innerHTML=`<span class="rank-name">${d.n}</span><div class="rank-track"><div class="rank-bar" style="width:${(d.e/maxE*100).toFixed(0)}%;background:${col}"></div></div><span class="rank-val">${(d.e/1000).toFixed(0)}k</span>`;
+      row.onclick=()=>{selMSA=d;updateDetail(d);buildRank();drawMap();}; el.appendChild(row);
+    });
+  } else {
+    RISK.forEach(d=>{
+      const col=rCol(d.hi); const row=document.createElement('div'); row.className='rank-row'+(selMSA&&selMSA.n===d.n?' sel':'');
+      row.innerHTML=`<span class="rank-name">${d.n}</span><div class="rank-track"><div class="rank-bar" style="width:${d.hi}%;background:${col}"></div></div><span class="rank-val">${d.hi}%</span>`;
+      row.onclick=()=>{selMSA=d;updateDetail(d);buildRank();drawMap();}; el.appendChild(row);
+    });
+  }
+}
+
+function updateLeg(){
+  const el=document.getElementById('mapLeg');
+  if(mode==='emp') el.innerHTML=`<span class="leg-item"><span class="leg-sq" style="background:${SEC_COL[activeSec]};opacity:.6"></span>Employment (size = workers)</span>`;
+  else el.innerHTML=`<span class="leg-item"><span class="leg-sq" style="background:#A32D2D"></span>&gt;40% high risk</span><span class="leg-item"><span class="leg-sq" style="background:#E24B4A"></span>20–40% mid</span><span class="leg-item"><span class="leg-sq" style="background:#F09595"></span>&lt;20% lower</span><span style="font-size:11px;color:var(--muted)">size = workers at risk</span>`;
+}
+
+function setMode(m){
+  mode=m; selMSA=null;
+  document.getElementById('mEmp').classList.toggle('active',m==='emp');
+  document.getElementById('mRisk').classList.toggle('active',m==='risk');
+  document.getElementById('secBtns').style.visibility=m==='emp'?'visible':'hidden';
+  document.getElementById('mapHead').textContent=m==='emp'?`Sector employment — ${activeSec}`:'Displacement pressure — all sectors';
+  document.getElementById('rankHead').textContent=m==='emp'?`${activeSec} employment by MSA`:'MSA ranking by displacement share';
+  updateLeg(); buildRank(); updateDetail(null); drawMap();
+}
+
+document.getElementById('mEmp').onclick=()=>setMode('emp');
+document.getElementById('mRisk').onclick=()=>setMode('risk');
+document.getElementById('secBtns').addEventListener('click',e=>{
+  if(!e.target.dataset.sec) return;
+  activeSec=e.target.dataset.sec; selMSA=null;
+  document.querySelectorAll('.s-btn').forEach(b=>b.classList.toggle('active',b.dataset.sec===activeSec));
+  document.getElementById('mapHead').textContent=`Sector employment — ${activeSec}`;
+  document.getElementById('rankHead').textContent=`${activeSec} employment by MSA`;
+  updateLeg(); buildRank(); updateDetail(null); drawMap();
+});
+
+setMode('emp');
+window.addEventListener('resize',drawMap);
+</script>
+</body>
+</html>
