@@ -149,10 +149,6 @@ function getScen(sec,idx){ const [cr,mr]=SC_PARAMS[idx]; return applyScenario(BA
 function render(){
   const base=BASE[activeSec], cur=getScen(activeSec,activeScen);
   const [cr,mr]=SC_PARAMS[activeScen];
-  const atRisk=Math.round(base.emp*(cr*base.Computers+mr*base.Machinery)/base.Computers*base.Computers);
-  const totalAtRisk=Math.round(base.emp*(cr*0.12+mr*0.11));
-  const scTag=document.getElementById('scTag');
-  scTag.innerHTML=`<span class="sc-dot" style="background:${SC_COLS[activeScen]}"></span>${SCENARIOS[activeScen]}`;
   document.getElementById('metrics').innerHTML=`
     <div class="metric"><div class="metric-label">Sector</div><div class="metric-value" style="font-size:19px;padding-top:3px">${activeSec}</div><div class="metric-sub">${(base.emp/1000).toFixed(0)}k workers</div></div>
     <div class="metric"><div class="metric-label">Scenario</div><div class="metric-value" style="font-size:15px;padding-top:6px;color:${SC_COLS[activeScen]}">${SCENARIOS[activeScen]}</div><div class="metric-sub">AI adoption level</div></div>
