@@ -30,9 +30,6 @@
   .s-btn { font-size: 13px; font-family: -apple-system,'Segoe UI',sans-serif; padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--off); color: var(--muted); cursor: pointer; transition: all 0.15s; font-weight: 400; }
   .s-btn:hover { border-color: rgba(30,39,97,0.2); color: var(--dark); }
   .s-btn.active { background: var(--navy); color: var(--white); border-color: var(--navy); font-weight: 500; }
-  .slider-wrap { display: flex; align-items: center; gap: 12px; }
-  input[type=range] { -webkit-appearance: none; width: 220px; height: 4px; border-radius: 2px; background: #CBD5E1; outline: none; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--navy); cursor: pointer; box-shadow: 0 1px 4px rgba(30,39,97,0.3); }
   .sc-tag { font-size: 13px; font-weight: 500; font-family: monospace; min-width: 110px; color: var(--dark); }
   .sc-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
 
@@ -96,9 +93,9 @@
     </div>
     <div class="ctrl-group">
       <label>AI Adoption Scenario</label>
-      <div class="slider-wrap">
-        <input type="range" id="slider" min="0" max="3" step="1" value="0">
-        <span class="sc-tag" id="scTag"><span class="sc-dot" style="background:#888780"></span>Baseline</span>
+      <div style="display:flex;gap:8px">
+        <button class="s-btn active" id="btnBaseline" onclick="setScen(0)">Baseline</button>
+        <button class="s-btn" id="btnHigh" onclick="setScen(1)" style="border-color:#A32D2D;color:#A32D2D">High adoption</button>
       </div>
     </div>
   </div>
@@ -118,7 +115,7 @@
   </div>
 </main>
 
-<footer>Source: BLS OEWS May 2024 · ONET Macro Skills · California MSA-level analysis · © 2024</footer>
+<footer>Source: BLS OEWS May 2024 · ONET Macro Skills · California MSA-level analysis · © 2026</footer>
 
 <script>
 const BASE = {
@@ -127,9 +124,9 @@ const BASE = {
   Transportation: {emp:1357700, Communication:0.3623,Computers:0.1211,Information:0.2109,Machinery:0.1122,Management:0.1935},
   Energy:         {emp:40960,   Communication:0.3405,Computers:0.1346,Information:0.2101,Machinery:0.1223,Management:0.1924},
 };
-const SCENARIOS=['Baseline','Low adoption','Mid adoption','High adoption'];
-const SC_PARAMS=[[0,0],[0.10,0.08],[0.25,0.20],[0.45,0.38]];
-const SC_COLS=['#888780','#1D9E75','#BA7517','#A32D2D'];
+const SCENARIOS=['Baseline','High adoption'];
+const SC_PARAMS=[[0,0],[0.45,0.38]];
+const SC_COLS=['#888780','#A32D2D'];
 const SKILLS=['Communication','Computers','Information','Machinery','Management'];
 const SKILL_COLS={Communication:'#185FA5',Computers:'#1D9E75',Information:'#BA7517',Machinery:'#E24B4A',Management:'#7F77DD'};
 const SEC_COLS={Agriculture:'#1D9E75',Construction:'#BA7517',Transportation:'#185FA5',Energy:'#993C1D'};
@@ -185,7 +182,7 @@ function render(){
   const machDelta=((cur.Machinery-base.Machinery)*100).toFixed(1);
   document.getElementById('keyFinding').innerHTML=activeScen===0
     ? `<strong>Baseline:</strong> Communication dominates at ${(base.Communication*100).toFixed(1)}% of skill demand. Machinery exposure is ${(base.Machinery*100).toFixed(1)}%.`
-    : `<strong>${SCENARIOS[activeScen]}:</strong> Communication grows +${commDelta}pp. Machinery shrinks ${machDelta}pp. The shift toward human coordination and judgment is ${activeScen===3?'dramatic':'visible'} across all skills.`;
+    : `<strong>High adoption:</strong> Communication grows +${commDelta}pp. Machinery shrinks ${machDelta}pp. The shift toward human coordination and judgment is dramatic across all skills.`;
   const cg=document.getElementById('compareGrid');
   cg.innerHTML='';
   SECTORS.forEach(sec=>{
@@ -205,7 +202,14 @@ document.getElementById('sectorBtns').addEventListener('click',e=>{
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===activeSec));
   render();
 });
-document.getElementById('slider').addEventListener('input',e=>{activeScen=parseInt(e.target.value);render();});
+function setScen(idx){
+  activeScen=idx;
+  document.getElementById('btnBaseline').classList.toggle('active',idx===0);
+  document.getElementById('btnHigh').classList.toggle('active',idx===1);
+  if(idx===1){document.getElementById('btnHigh').style.background='#A32D2D';document.getElementById('btnHigh').style.color='#fff';document.getElementById('btnHigh').style.borderColor='#A32D2D';}
+  else{document.getElementById('btnHigh').style.background='';document.getElementById('btnHigh').style.color='#A32D2D';document.getElementById('btnHigh').style.borderColor='#A32D2D';}
+  render();
+}
 render();
 </script>
 </body>
