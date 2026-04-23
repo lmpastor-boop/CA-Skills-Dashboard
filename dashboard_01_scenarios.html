@@ -14,7 +14,7 @@
     --purple: #534AB7; --green: #3B6D11;
     --comm: #185FA5; --comp: #1D9E75; --info: #BA7517; --mach: #E24B4A; --mgmt: #7F77DD;
   }
-  body { font-family: -apple-system,'Segoe UI',sans-serif; background: #F0F2F8; color: var(--dark); min-height: 100vh; }
+  body { font-family: -apple-system,"Segoe UI",sans-serif; background: #F0F2F8; color: var(--dark); min-height: 100vh; }
 
   header { background: var(--navy); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
   header h1 { color: var(--white); font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
@@ -26,10 +26,11 @@
   .controls { background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
   .ctrl-group { display: flex; flex-direction: column; gap: 7px; }
   .ctrl-group label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-  .sector-btns { display: flex; gap: 7px; }
-  .s-btn { font-size: 13px; font-family: -apple-system,'Segoe UI',sans-serif; padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--off); color: var(--muted); cursor: pointer; transition: all 0.15s; font-weight: 400; }
+  .sector-btns { display: flex; gap: 7px; flex-wrap: wrap; }
+  .s-btn { font-size: 13px; font-family: -apple-system,"Segoe UI",sans-serif; padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--off); color: var(--muted); cursor: pointer; transition: all 0.15s; font-weight: 400; }
   .s-btn:hover { border-color: rgba(30,39,97,0.2); color: var(--dark); }
   .s-btn.active { background: var(--navy); color: var(--white); border-color: var(--navy); font-weight: 500; }
+  .s-btn.role-active { background: #185FA5; color: var(--white); border-color: #185FA5; font-weight: 500; }
   .sc-tag { font-size: 13px; font-weight: 500; font-family: monospace; min-width: 110px; color: var(--dark); }
   .sc-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
 
@@ -68,6 +69,21 @@
   .key-finding { background: #EEEDFE; border: 1px solid #AFA9EC; border-radius: 10px; padding: 12px 16px; margin-top: 16px; font-size: 12px; color: #3C3489; line-height: 1.6; }
   .key-finding strong { font-weight: 500; }
 
+  /* Role filter styles — matching Amal design language */
+  .role-section { background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 20px; }
+  .role-section-head { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .role-section-head .divider { flex: 1; height: 1px; background: var(--border); }
+  .role-btns { display: flex; gap: 7px; flex-wrap: wrap; }
+  .role-btn { font-size: 12px; font-family: -apple-system,"Segoe UI",sans-serif; padding: 6px 13px; border-radius: 8px; border: 1px solid var(--border); background: var(--off); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .role-btn:hover { border-color: rgba(24,95,165,0.3); color: #185FA5; }
+  .role-btn.active { background: #185FA5; color: var(--white); border-color: #185FA5; font-weight: 500; }
+  .role-btn.all-btn.active { background: var(--navy); border-color: var(--navy); }
+  .role-tag { display: inline-block; font-size: 10px; font-family: monospace; padding: 2px 8px; border-radius: 10px; background: #E8F0FE; color: #185FA5; border: 1px solid rgba(24,95,165,0.2); margin-left: 6px; }
+  .exposure-badge { font-size: 10px; font-family: monospace; padding: 2px 8px; border-radius: 10px; }
+  .exp-high { background: #FCEBEB; color: #791F1F; }
+  .exp-mid  { background: #FEF3C7; color: #92400E; }
+  .exp-low  { background: #EAF3DE; color: #27500A; }
+
   footer { text-align: center; padding: 24px; font-size: 11px; color: var(--muted); font-family: monospace; }
 </style>
 </head>
@@ -75,12 +91,13 @@
 <header>
   <div>
     <h1>California Skills Landscape — Scenario Simulator</h1>
-    <div class="sub">Exhibit 04 · Employment-weighted macro skill shares by sector</div>
+    <div class="sub">Exhibit 04 · Employment-weighted macro skill shares by sector &amp; role</div>
   </div>
   <span class="badge">BLS OEWS May 2024 + ONET</span>
 </header>
 
 <main>
+  <!-- Sector + Scenario controls -->
   <div class="controls">
     <div class="ctrl-group">
       <label>Sector</label>
@@ -100,6 +117,16 @@
     </div>
   </div>
 
+  <!-- Role filter — new section -->
+  <div class="role-section">
+    <div class="role-section-head">
+      <span>View by Job Role</span>
+      <div class="divider"></div>
+      <span style="font-size:10px;color:var(--muted);font-family:monospace">O*NET skill shares · select a role to drill down</span>
+    </div>
+    <div class="role-btns" id="roleBtns"></div>
+  </div>
+
   <div class="metrics" id="metrics"></div>
 
   <div class="grid2">
@@ -109,7 +136,7 @@
       <div class="key-finding" id="keyFinding"></div>
     </div>
     <div class="card">
-      <p class="card-head">All-sector comparison at current scenario</p>
+      <p class="card-head" id="compareHead">All-sector comparison at current scenario</p>
       <div class="compare-grid" id="compareGrid"></div>
     </div>
   </div>
@@ -118,12 +145,69 @@
 <footer>Source: BLS OEWS May 2024 · ONET Macro Skills · California MSA-level analysis · © 2026</footer>
 
 <script>
+// ── Sector-level data (Amal original) ──
 const BASE = {
   Agriculture:    {emp:200400,  Communication:0.3467,Computers:0.1369,Information:0.2021,Machinery:0.1274,Management:0.1870},
   Construction:   {emp:625920,  Communication:0.3572,Computers:0.1243,Information:0.2056,Machinery:0.1147,Management:0.1981},
   Transportation: {emp:1357700, Communication:0.3623,Computers:0.1211,Information:0.2109,Machinery:0.1122,Management:0.1935},
   Energy:         {emp:40960,   Communication:0.3405,Computers:0.1346,Information:0.2101,Machinery:0.1223,Management:0.1924},
 };
+
+// ── Role-level skill profiles (from O*NET macro skill weights) ──
+const ROLE_SKILLS = {
+  // Construction
+  "Electrician":           {Communication:0.6,Computers:0.5,Information:0.5,Machinery:0.9,Management:0.4},
+  "Plumber":               {Communication:0.5,Computers:0.3,Information:0.4,Machinery:0.9,Management:0.3},
+  "Carpenter":             {Communication:0.5,Computers:0.3,Information:0.4,Machinery:0.8,Management:0.3},
+  "Construction Manager":  {Communication:0.9,Computers:0.7,Information:0.8,Machinery:0.4,Management:1.0},
+  "Civil Engineer":        {Communication:0.8,Computers:0.9,Information:0.9,Machinery:0.5,Management:0.8},
+  "Equipment Operator":    {Communication:0.4,Computers:0.4,Information:0.3,Machinery:1.0,Management:0.3},
+  "Welder":                {Communication:0.4,Computers:0.3,Information:0.3,Machinery:0.9,Management:0.2},
+  "HVAC Technician":       {Communication:0.6,Computers:0.6,Information:0.6,Machinery:0.9,Management:0.4},
+  // Energy
+  "Solar Panel Installer":    {Communication:0.5,Computers:0.6,Information:0.5,Machinery:0.8,Management:0.3},
+  "Wind Turbine Technician":  {Communication:0.5,Computers:0.7,Information:0.6,Machinery:0.9,Management:0.3},
+  "Electrical Engineer":      {Communication:0.8,Computers:0.9,Information:0.9,Machinery:0.6,Management:0.7},
+  "Power Plant Operator":     {Communication:0.6,Computers:0.7,Information:0.7,Machinery:0.9,Management:0.5},
+  "Energy Auditor":           {Communication:0.8,Computers:0.8,Information:0.9,Machinery:0.4,Management:0.7},
+  "Pipeline Technician":      {Communication:0.5,Computers:0.5,Information:0.5,Machinery:0.9,Management:0.3},
+  // Transportation
+  "Truck Driver":             {Communication:0.5,Computers:0.5,Information:0.4,Machinery:0.9,Management:0.3},
+  "Logistics Coordinator":    {Communication:0.9,Computers:0.8,Information:0.9,Machinery:0.3,Management:0.8},
+  "Fleet Manager":            {Communication:0.8,Computers:0.8,Information:0.8,Machinery:0.5,Management:1.0},
+  "Rail Operator":            {Communication:0.6,Computers:0.6,Information:0.5,Machinery:0.9,Management:0.4},
+  "Supply Chain Analyst":     {Communication:0.8,Computers:0.9,Information:1.0,Machinery:0.2,Management:0.8},
+  "Warehouse Supervisor":     {Communication:0.7,Computers:0.6,Information:0.7,Machinery:0.6,Management:0.9},
+  // Agriculture
+  "Farm Manager":             {Communication:0.7,Computers:0.6,Information:0.7,Machinery:0.7,Management:1.0},
+  "Agricultural Technician":  {Communication:0.5,Computers:0.6,Information:0.6,Machinery:0.8,Management:0.4},
+  "Irrigation Specialist":    {Communication:0.5,Computers:0.6,Information:0.6,Machinery:0.8,Management:0.4},
+  "Precision Ag Operator":    {Communication:0.5,Computers:0.9,Information:0.8,Machinery:0.8,Management:0.4},
+  "Agricultural Engineer":    {Communication:0.7,Computers:0.9,Information:0.9,Machinery:0.7,Management:0.7},
+  "Crop Scientist":           {Communication:0.7,Computers:0.8,Information:0.9,Machinery:0.4,Management:0.6},
+};
+
+// Real O*NET-derived AI exposure scores
+const ROLE_EXPOSURE = {
+  "Electrician":0.2543,"Plumber":0.5612,"Carpenter":0.3041,"Construction Manager":0.3384,
+  "Civil Engineer":1.1226,"Equipment Operator":0.2480,"Welder":0.2971,"HVAC Technician":0.2680,
+  "Solar Panel Installer":0.2863,"Wind Turbine Technician":0.2395,"Electrical Engineer":0.3309,
+  "Power Plant Operator":0.8207,"Energy Auditor":1.4833,"Pipeline Technician":0.2618,
+  "Truck Driver":0.2473,"Logistics Coordinator":1.1591,"Fleet Manager":0.7377,
+  "Rail Operator":0.2809,"Supply Chain Analyst":1.1591,"Warehouse Supervisor":0.6720,
+  "Farm Manager":0.3112,"Agricultural Technician":0.6296,"Irrigation Specialist":0.2281,
+  "Precision Ag Operator":0.2281,"Agricultural Engineer":0.3540,"Crop Scientist":0.3714,
+};
+
+const ROLES_BY_SECTOR = {
+  Construction:   ["Electrician","Plumber","Carpenter","Construction Manager","Civil Engineer","Equipment Operator","Welder","HVAC Technician"],
+  Energy:         ["Solar Panel Installer","Wind Turbine Technician","Electrical Engineer","Power Plant Operator","Energy Auditor","Pipeline Technician"],
+  Transportation: ["Truck Driver","Logistics Coordinator","Fleet Manager","Rail Operator","Supply Chain Analyst","Warehouse Supervisor"],
+  Agriculture:    ["Farm Manager","Agricultural Technician","Irrigation Specialist","Precision Ag Operator","Agricultural Engineer","Crop Scientist"],
+};
+
+const AI_WEIGHTS = {Computers:1.0,Information:0.6,Management:0.3,Communication:0.2,Machinery:-0.8};
+
 const SCENARIOS=['Baseline','High adoption'];
 const SC_PARAMS=[[0,0],[0.45,0.38]];
 const SC_COLS=['#888780','#A32D2D'];
@@ -132,7 +216,16 @@ const SKILL_COLS={Communication:'#185FA5',Computers:'#1D9E75',Information:'#BA75
 const SEC_COLS={Agriculture:'#1D9E75',Construction:'#BA7517',Transportation:'#185FA5',Energy:'#993C1D'};
 const SECTORS=['Agriculture','Construction','Transportation','Energy'];
 
-let activeSec='Agriculture', activeScen=0;
+let activeSec='Agriculture', activeScen=0, activeRole=null;
+
+// ── Normalize role skills to shares summing to 1 ──
+function normalizeRole(role) {
+  const raw = ROLE_SKILLS[role];
+  const total = Object.values(raw).reduce((s,v)=>s+v,0);
+  const norm = {};
+  Object.keys(raw).forEach(k => norm[k] = raw[k]/total);
+  return norm;
+}
 
 function applyScenario(base, cr, mr) {
   const r={...base};
@@ -146,27 +239,88 @@ function applyScenario(base, cr, mr) {
 
 function getScen(sec,idx){ const [cr,mr]=SC_PARAMS[idx]; return applyScenario(BASE[sec],cr,mr); }
 
+function expBadge(exp) {
+  if(exp > 0.6) return `<span class="exposure-badge exp-high">High AI exposure</span>`;
+  if(exp > 0.35) return `<span class="exposure-badge exp-mid">Moderate AI exposure</span>`;
+  return `<span class="exposure-badge exp-low">Lower AI exposure</span>`;
+}
+
+function renderRoleBtns() {
+  const roles = ROLES_BY_SECTOR[activeSec];
+  const btns = document.getElementById('roleBtns');
+  btns.innerHTML = `<button class="role-btn all-btn ${activeRole===null?'active':''}" onclick="setRole(null)">All roles (sector)</button>`;
+  roles.forEach(r => {
+    btns.innerHTML += `<button class="role-btn ${activeRole===r?'active':''}" onclick="setRole('${r}')">${r}</button>`;
+  });
+}
+
+function setRole(role) {
+  activeRole = role;
+  render();
+}
+
 function render(){
-  const base=BASE[activeSec], cur=getScen(activeSec,activeScen);
-  const [cr,mr]=SC_PARAMS[activeScen];
+  const base = activeRole ? normalizeRole(activeRole) : BASE[activeSec];
+  const baseEmp = BASE[activeSec];
+
+  // For role view: apply scenario adjustment using same logic
+  let cur;
+  if(activeRole) {
+    const [cr,mr]=SC_PARAMS[activeScen];
+    cur = applyScenario({...base, emp: baseEmp.emp}, cr, mr);
+  } else {
+    cur = getScen(activeSec, activeScen);
+  }
+
+  const exp = activeRole ? ROLE_EXPOSURE[activeRole] : null;
+
+  // ── Metrics ──
+  const sectorLabel = activeRole ? `${activeRole}` : activeSec;
+  const subLabel = activeRole ? `${activeSec} sector` : `${(baseEmp.emp/1000).toFixed(0)}k workers`;
   document.getElementById('metrics').innerHTML=`
-    <div class="metric"><div class="metric-label">Sector</div><div class="metric-value" style="font-size:19px;padding-top:3px">${activeSec}</div><div class="metric-sub">${(base.emp/1000).toFixed(0)}k workers</div></div>
-    <div class="metric"><div class="metric-label">Scenario</div><div class="metric-value" style="font-size:15px;padding-top:6px;color:${SC_COLS[activeScen]}">${SCENARIOS[activeScen]}</div><div class="metric-sub">AI adoption level</div></div>
-    <div class="metric"><div class="metric-label">Communication share</div><div class="metric-value" style="color:#185FA5">${(cur.Communication*100).toFixed(1)}%</div><div class="metric-sub">${activeScen>0?'was '+(base.Communication*100).toFixed(1)+'%':'baseline'}</div></div>
-    <div class="metric"><div class="metric-label">Machinery share</div><div class="metric-value" style="color:#E24B4A">${(cur.Machinery*100).toFixed(1)}%</div><div class="metric-sub">${activeScen>0?'was '+(base.Machinery*100).toFixed(1)+'%':'baseline'}</div></div>
-  `;
-  document.getElementById('barsHead').textContent=`Skill demand — ${activeSec} · ${SCENARIOS[activeScen]}`;
+    <div class="metric">
+      <div class="metric-label">${activeRole ? 'Role' : 'Sector'}</div>
+      <div class="metric-value" style="font-size:${activeRole?'14px':'19px'};padding-top:3px">${sectorLabel}</div>
+      <div class="metric-sub">${subLabel}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Scenario</div>
+      <div class="metric-value" style="font-size:15px;padding-top:6px;color:${SC_COLS[activeScen]}">${SCENARIOS[activeScen]}</div>
+      <div class="metric-sub">AI adoption level</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Communication share</div>
+      <div class="metric-value" style="color:#185FA5">${(cur.Communication*100).toFixed(1)}%</div>
+      <div class="metric-sub">${activeScen>0?'was '+(base.Communication*100).toFixed(1)+'%':'baseline'}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">${activeRole ? 'AI Exposure Score' : 'Machinery share'}</div>
+      <div class="metric-value" style="color:${activeRole?'#185FA5':'#E24B4A'}">${activeRole ? (exp).toFixed(4) : (cur.Machinery*100).toFixed(1)+'%'}</div>
+      <div class="metric-sub">${activeRole ? (exp>0.6?'high exposure':exp>0.35?'moderate':'lower exposure') : (activeScen>0?'was '+(base.Machinery*100).toFixed(1)+'%':'baseline')}</div>
+    </div>`;
+
+  // ── Bars head ──
+  const headLabel = activeRole
+    ? `Skill profile — ${activeRole} · ${activeSec} · ${SCENARIOS[activeScen]}`
+    : `Skill demand — ${activeSec} · ${SCENARIOS[activeScen]}`;
+  document.getElementById('barsHead').textContent = headLabel;
+
+  // ── Skill bars ──
   const barsEl=document.getElementById('skillBars');
   barsEl.innerHTML='';
   const maxShare=0.48;
   SKILLS.forEach(sk=>{
-    const bv=base[sk],cv=cur[sk],d=cv-bv;
+    const bv=base[sk]||0, cv=cur[sk]||0, d=cv-bv;
     const sign=d>0.001?'+':'';
     const pillCls=d>0.001?'pill-up':d<-0.001?'pill-dn':'pill-flat';
     const col=SKILL_COLS[sk];
+    const aiW = AI_WEIGHTS[sk];
+    const aiNote = activeRole
+      ? `<span style="font-size:10px;color:${aiW>0?'#1D9E75':'#E24B4A'};font-family:monospace;margin-left:4px">${aiW>0?'▲ AI+':'▼ AI−'}</span>`
+      : '';
     barsEl.innerHTML+=`<div class="skill-row">
       <div class="skill-header">
-        <span class="skill-name">${sk}</span>
+        <span class="skill-name">${sk}${aiNote}</span>
         <div class="skill-right"><span class="skill-val">${(cv*100).toFixed(1)}%</span><span class="pill ${pillCls}">${sign}${(d*100).toFixed(1)}pp</span></div>
       </div>
       <div class="bar-track">
@@ -174,30 +328,73 @@ function render(){
         <div class="bar-fill" style="width:${(cv/maxShare*100).toFixed(1)}%;background:${col}"></div>
       </div></div>`;
   });
+
+  // ── Key finding ──
   const commDelta=((cur.Communication-base.Communication)*100).toFixed(1);
   const machDelta=((cur.Machinery-base.Machinery)*100).toFixed(1);
-  document.getElementById('keyFinding').innerHTML=activeScen===0
-    ? `<strong>Baseline:</strong> Communication dominates at ${(base.Communication*100).toFixed(1)}% of skill demand. Machinery exposure is ${(base.Machinery*100).toFixed(1)}%.`
-    : `<strong>High adoption:</strong> Communication grows +${commDelta}pp. Machinery shrinks ${machDelta}pp. The shift toward human coordination and judgment is dramatic across all skills.`;
+  let finding = '';
+  if(activeRole) {
+    const topSkill = SKILLS.reduce((a,b) => (cur[a]||0)>(cur[b]||0)?a:b);
+    const aiSignal = Object.entries(AI_WEIGHTS)
+      .map(([k,w]) => ({k, sig:(cur[k]||0)*w}))
+      .sort((a,b)=>b.sig-a.sig);
+    const topAI = aiSignal[0].k;
+    finding = `<strong>${activeRole}:</strong> ${expBadge(exp)} Most important skill: <strong>${topSkill}</strong> at ${(cur[topSkill]*100).toFixed(1)}%. Strongest AI signal: <strong>${topAI}</strong>. ${activeScen>0?`Under high AI adoption, Communication grows +${commDelta}pp and Machinery shrinks ${machDelta}pp.`:'Switch to High adoption to see AI impact.'}`;
+  } else {
+    finding = activeScen===0
+      ? `<strong>Baseline:</strong> Communication dominates at ${(base.Communication*100).toFixed(1)}% of skill demand. Machinery exposure is ${(base.Machinery*100).toFixed(1)}%.`
+      : `<strong>High adoption:</strong> Communication grows +${commDelta}pp. Machinery shrinks ${machDelta}pp. The shift toward human coordination and judgment is dramatic across all skills.`;
+  }
+  document.getElementById('keyFinding').innerHTML = finding;
+
+  // ── Compare grid ──
+  const compareHead = activeRole
+    ? `Role comparison — ${activeSec} roles at current scenario`
+    : `All-sector comparison at current scenario`;
+  document.getElementById('compareHead').textContent = compareHead;
+
   const cg=document.getElementById('compareGrid');
   cg.innerHTML='';
-  SECTORS.forEach(sec=>{
-    const d=getScen(sec,activeScen),col=SEC_COLS[sec];
-    let inner=`<div class="cmp-head" style="color:${col}">${sec}</div>`;
-    SKILLS.forEach(sk=>{
-      inner+=`<div class="cmp-sk"><span class="cmp-sk-name">${sk.slice(0,4)}</span><span class="cmp-sk-val" style="color:${SKILL_COLS[sk]}">${(d[sk]*100).toFixed(1)}%</span></div>
-      <div class="mini-bar"><div class="mini-bar-fill" style="width:${(d[sk]/0.48*100).toFixed(0)}%;background:${SKILL_COLS[sk]}"></div></div>`;
+
+  if(activeRole) {
+    // Show all roles in current sector for comparison
+    const roles = ROLES_BY_SECTOR[activeSec];
+    roles.forEach(r => {
+      const rd = applyScenario({...normalizeRole(r)}, ...SC_PARAMS[activeScen]);
+      const col = SEC_COLS[activeSec];
+      const isActive = r === activeRole;
+      let inner=`<div class="cmp-head" style="color:${isActive?'#185FA5':col};font-weight:${isActive?600:500};font-size:${isActive?'11px':'10px'}">${r}${isActive?' ◀':''}</div>`;
+      SKILLS.forEach(sk=>{
+        inner+=`<div class="cmp-sk"><span class="cmp-sk-name">${sk.slice(0,4)}</span><span class="cmp-sk-val" style="color:${SKILL_COLS[sk]}">${(rd[sk]*100).toFixed(1)}%</span></div>
+        <div class="mini-bar"><div class="mini-bar-fill" style="width:${(rd[sk]/0.48*100).toFixed(0)}%;background:${SKILL_COLS[sk]}"></div></div>`;
+      });
+      cg.innerHTML+=`<div class="cmp" style="${isActive?'border:1px solid #185FA5;':''}">${inner}</div>`;
     });
-    cg.innerHTML+=`<div class="cmp">${inner}</div>`;
-  });
+  } else {
+    SECTORS.forEach(sec=>{
+      const d=getScen(sec,activeScen),col=SEC_COLS[sec];
+      let inner=`<div class="cmp-head" style="color:${col}">${sec}</div>`;
+      SKILLS.forEach(sk=>{
+        inner+=`<div class="cmp-sk"><span class="cmp-sk-name">${sk.slice(0,4)}</span><span class="cmp-sk-val" style="color:${SKILL_COLS[sk]}">${(d[sk]*100).toFixed(1)}%</span></div>
+        <div class="mini-bar"><div class="mini-bar-fill" style="width:${(d[sk]/0.48*100).toFixed(0)}%;background:${SKILL_COLS[sk]}"></div></div>`;
+      });
+      cg.innerHTML+=`<div class="cmp">${inner}</div>`;
+    });
+  }
+
+  // ── Role buttons ──
+  renderRoleBtns();
 }
 
+// ── Event listeners ──
 document.getElementById('sectorBtns').addEventListener('click',e=>{
   if(!e.target.dataset.s) return;
   activeSec=e.target.dataset.s;
-  document.querySelectorAll('.s-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===activeSec));
+  activeRole=null;
+  document.querySelectorAll('#sectorBtns .s-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===activeSec));
   render();
 });
+
 function setScen(idx){
   activeScen=idx;
   document.getElementById('btnBaseline').classList.toggle('active',idx===0);
@@ -206,6 +403,7 @@ function setScen(idx){
   else{document.getElementById('btnHigh').style.background='';document.getElementById('btnHigh').style.color='#A32D2D';document.getElementById('btnHigh').style.borderColor='#A32D2D';}
   render();
 }
+
 render();
 </script>
 </body>
