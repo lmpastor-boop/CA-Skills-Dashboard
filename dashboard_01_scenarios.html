@@ -88,6 +88,25 @@
 </style>
 </head>
 <body>
+<!-- ── Universal Navigation Bar ── -->
+<nav style="background:#0D1829;padding:10px 32px;display:flex;align-items:center;gap:0;border-bottom:2px solid #1E2761;position:sticky;top:0;z-index:100;flex-wrap:wrap;">
+  <span style="color:#CADCFC;font-size:12px;font-family:monospace;font-weight:500;margin-right:20px;white-space:nowrap;">CA Skills Landscape</span>
+  <div style="display:flex;gap:4px;flex-wrap:wrap;">
+    <a href="index.html" style="font-size:12px;padding:5px 12px;border-radius:7px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;color:#94A3B8;border:1px solid transparent;">&#8962; Home</a>
+    <a href="dashboard_00_forecaster.html" id="nav_f" style="font-size:12px;padding:5px 12px;border-radius:7px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;color:#94A3B8;border:1px solid transparent;">&#9889; Workforce Forecaster</a>
+    <a href="dashboard_01_scenarios.html" id="nav_s" style="font-size:12px;padding:5px 12px;border-radius:7px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;color:#94A3B8;border:1px solid transparent;">&#8767; Scenario Simulator</a>
+    <a href="dashboard_02_explorer.html" id="nav_e" style="font-size:12px;padding:5px 12px;border-radius:7px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;color:#94A3B8;border:1px solid transparent;">&#9673; Workforce Explorer</a>
+    <a href="dashboard_03_geo.html" id="nav_g" style="font-size:12px;padding:5px 12px;border-radius:7px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;color:#94A3B8;border:1px solid transparent;">&#8857; Geographic Map</a>
+  </div>
+</nav>
+<script>
+(function(){
+  const page = location.pathname.split('/').pop() || 'index.html';
+  const map = {'dashboard_00_forecaster.html':'nav_f','dashboard_01_scenarios.html':'nav_s','dashboard_02_explorer.html':'nav_e','dashboard_03_geo.html':'nav_g'};
+  const el = document.getElementById(map[page]);
+  if(el){ el.style.background='rgba(202,220,252,0.15)'; el.style.color='#CADCFC'; el.style.borderColor='rgba(202,220,252,0.25)'; }
+})();
+</script>
 <header>
   <div>
     <h1>California Skills Landscape — Scenario Simulator</h1>
