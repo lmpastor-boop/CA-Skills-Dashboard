@@ -47,6 +47,25 @@
 </style>
 </head>
 <body>
+<!-- ── Universal Navigation Bar ── -->
+<nav style="background:#0D1829;padding:10px 32px;display:flex;align-items:center;gap:0;border-bottom:2px solid #1E2761;position:sticky;top:0;z-index:100;flex-wrap:wrap;">
+  <span style="color:#CADCFC;font-size:12px;font-family:monospace;font-weight:500;margin-right:20px;white-space:nowrap;">CA Skills Landscape</span>
+  <div style="display:flex;gap:4px;flex-wrap:wrap;">
+    <a href="index.html" style="font-size:12px;padding:5px 12px;border-radius:7px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;color:#94A3B8;border:1px solid transparent;">&#8962; Home</a>
+    <a href="dashboard_00_forecaster.html" id="nav_f" style="font-size:12px;padding:5px 12px;border-radius:7px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;color:#94A3B8;border:1px solid transparent;">&#9889; Workforce Forecaster</a>
+    <a href="dashboard_01_scenarios.html" id="nav_s" style="font-size:12px;padding:5px 12px;border-radius:7px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;color:#94A3B8;border:1px solid transparent;">&#8767; Scenario Simulator</a>
+    <a href="dashboard_02_explorer.html" id="nav_e" style="font-size:12px;padding:5px 12px;border-radius:7px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;color:#94A3B8;border:1px solid transparent;">&#9673; Workforce Explorer</a>
+    <a href="dashboard_03_geo.html" id="nav_g" style="font-size:12px;padding:5px 12px;border-radius:7px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;color:#94A3B8;border:1px solid transparent;">&#8857; Geographic Map</a>
+  </div>
+</nav>
+<script>
+(function(){
+  const page = location.pathname.split('/').pop() || 'index.html';
+  const map = {'dashboard_00_forecaster.html':'nav_f','dashboard_01_scenarios.html':'nav_s','dashboard_02_explorer.html':'nav_e','dashboard_03_geo.html':'nav_g'};
+  const el = document.getElementById(map[page]);
+  if(el){ el.style.background='rgba(202,220,252,0.15)'; el.style.color='#CADCFC'; el.style.borderColor='rgba(202,220,252,0.25)'; }
+})();
+</script>
 <header>
   <div>
     <h1>California Skills Landscape — Geographic & Displacement</h1>
@@ -91,7 +110,7 @@
   </div>
 </main>
 
-<footer>Source: BLS OEWS May 2024 · ONET Macro Skills · California MSA-level analysis · © 2024</footer>
+<footer>Source: BLS OEWS May 2024 · ONET Macro Skills · California MSA-level analysis · © 2026</footer>
 
 <script>
 const LAT_MIN=32.4,LAT_MAX=41.0,LNG_MIN=-124.5,LNG_MAX=-114.1;
@@ -108,7 +127,7 @@ const RISK=[{n:'Salinas',tp:51300,hi:63.1,me:8.9,lo:28.0,he:32370,lat:36.68,lng:
 
 const SEC_COL={Agriculture:'#1D9E75',Construction:'#BA7517',Transportation:'#185FA5',Energy:'#993C1D'};
 function rCol(p){return p>=40?'#A32D2D':p>=20?'#E24B4A':'#F09595';}
-function rAlpha(p,a){return p>=40?`rgba(163,45,45,${a})`:p>=20?`rgba(226,75,74,${a})`:`rgba(240,149,149,${a})`;}
+function rAlpha(p,a){return p>=40?'rgba(163,45,45,'+a+')':p>=20?'rgba(226,75,74,'+a+')':'rgba(240,149,149,'+a+')';}
 
 let mode='emp', activeSec='Agriculture', selMSA=null;
 const canvas=document.getElementById('mapC'), ctx=canvas.getContext('2d');
@@ -130,7 +149,7 @@ function drawMap(){
       ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
       ctx.fillStyle=col+(sel?'EE':'99'); ctx.fill();
       ctx.strokeStyle=col; ctx.lineWidth=sel?2:0.6; ctx.stroke();
-      if(r>14){ctx.fillStyle='rgba(255,255,255,.92)';ctx.font=`500 9px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d.n.split('-')[0].split(',')[0],x,y);}
+      if(r>14){ctx.fillStyle='rgba(255,255,255,.92)';ctx.font='500 9px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d.n.split('-')[0].split(',')[0],x,y);}
       drawn.push({x,y,r,d});
     });
   } else {
@@ -141,7 +160,7 @@ function drawMap(){
       ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
       ctx.fillStyle=rAlpha(d.hi,sel?0.9:0.7); ctx.fill();
       ctx.strokeStyle=rCol(d.hi); ctx.lineWidth=sel?2:0.7; ctx.stroke();
-      if(r>16){ctx.fillStyle='rgba(255,255,255,.92)';ctx.font=`500 9px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d.n.split('-')[0],x,y);}
+      if(r>16){ctx.fillStyle='rgba(255,255,255,.92)';ctx.font='500 9px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d.n.split('-')[0],x,y);}
       drawn.push({x,y,r,d});
     });
   }
@@ -155,8 +174,8 @@ function handleHover(e){
   if(!hit){tip.style.display='none';canvas.style.cursor='default';return;}
   canvas.style.cursor='pointer'; tip.style.display='block';
   document.getElementById('tipN').textContent=hit.d.n;
-  if(mode==='emp') document.getElementById('tipB').innerHTML=`Employment: ${hit.d.e.toLocaleString()}<br>AI exposure: ${(hit.d.c*100).toFixed(1)}%`;
-  else document.getElementById('tipB').innerHTML=`At-risk workers: ${hit.d.he.toLocaleString()}<br>Displacement share: ${hit.d.hi}%<br>Total sector workers: ${hit.d.tp.toLocaleString()}`;
+  if(mode==='emp') document.getElementById('tipB').innerHTML='Employment: '+hit.d.e.toLocaleString()+'<br>AI exposure: '+(hit.d.c*100).toFixed(1)+'%';
+  else document.getElementById('tipB').innerHTML='At-risk workers: '+hit.d.he.toLocaleString()+'<br>Displacement share: '+hit.d.hi+'%<br>Total sector workers: '+hit.d.tp.toLocaleString();
   let lx=e.clientX-rect.left+12, ly=e.clientY-rect.top-10;
   if(lx+215>canvas.clientWidth) lx=e.clientX-rect.left-215;
   tip.style.left=lx+'px'; tip.style.top=ly+'px';
@@ -172,15 +191,15 @@ function updateDetail(d){
   if(!d){document.getElementById('detTitle').textContent='Click an MSA to inspect';document.getElementById('detTitle').style.color='var(--muted)';document.getElementById('stackBar').innerHTML='';document.getElementById('sl1').textContent='';document.getElementById('sl2').textContent='';document.getElementById('sl3').textContent='';return;}
   if(mode==='emp'){
     const col=SEC_COL[activeSec];
-    document.getElementById('detTitle').textContent=`${d.n} — ${activeSec}`;document.getElementById('detTitle').style.color=col;
-    document.getElementById('stackBar').innerHTML=`<div style="width:100%;height:14px;background:${col};border-radius:4px"></div>`;
-    document.getElementById('sl1').textContent=`${d.e.toLocaleString()} workers`;
-    document.getElementById('sl2').textContent=`AI exposure: ${(d.c*100).toFixed(1)}%`; document.getElementById('sl3').textContent='';
+    document.getElementById('detTitle').textContent=d.n+' — '+activeSec;document.getElementById('detTitle').style.color=col;
+    document.getElementById('stackBar').innerHTML='<div style="width:100%;height:14px;background:'+col+';border-radius:4px"></div>';
+    document.getElementById('sl1').textContent=d.e.toLocaleString()+' workers';
+    document.getElementById('sl2').textContent='AI exposure: '+(d.c*100).toFixed(1)+'%'; document.getElementById('sl3').textContent='';
   } else {
     const rd=RISK.find(r=>r.n===d.n)||d;
-    document.getElementById('detTitle').textContent=`${d.n} — displacement breakdown`; document.getElementById('detTitle').style.color=rCol(rd.hi);
-    document.getElementById('stackBar').innerHTML=`<div style="width:${rd.hi}%;background:#A32D2D;height:100%"></div><div style="width:${rd.me}%;background:#EF9F27;height:100%"></div><div style="width:${rd.lo}%;background:#1D9E75;height:100%"></div>`;
-    document.getElementById('sl1').textContent=`High ${rd.hi}%`; document.getElementById('sl2').textContent=`Mid ${rd.me}%`; document.getElementById('sl3').textContent=`Low ${rd.lo}%`;
+    document.getElementById('detTitle').textContent=d.n+' — displacement breakdown'; document.getElementById('detTitle').style.color=rCol(rd.hi);
+    document.getElementById('stackBar').innerHTML='<div style="width:'+rd.hi+'%;background:#A32D2D;height:100%"></div><div style="width:'+rd.me+'%;background:#EF9F27;height:100%"></div><div style="width:'+rd.lo+'%;background:#1D9E75;height:100%"></div>';
+    document.getElementById('sl1').textContent='High '+rd.hi+'%'; document.getElementById('sl2').textContent='Mid '+rd.me+'%'; document.getElementById('sl3').textContent='Low '+rd.lo+'%';
   }
 }
 
@@ -191,13 +210,13 @@ function buildRank(){
     const maxE=Math.max(...data.map(d=>d.e)), col=SEC_COL[activeSec];
     data.forEach(d=>{
       const row=document.createElement('div'); row.className='rank-row'+(selMSA&&selMSA.n===d.n?' sel':'');
-      row.innerHTML=`<span class="rank-name">${d.n}</span><div class="rank-track"><div class="rank-bar" style="width:${(d.e/maxE*100).toFixed(0)}%;background:${col}"></div></div><span class="rank-val">${(d.e/1000).toFixed(0)}k</span>`;
+      row.innerHTML='<span class="rank-name">'+d.n+'</span><div class="rank-track"><div class="rank-bar" style="width:'+(d.e/maxE*100).toFixed(0)+'%;background:'+col+'"></div></div><span class="rank-val">'+(d.e/1000).toFixed(0)+'k</span>';
       row.onclick=()=>{selMSA=d;updateDetail(d);buildRank();drawMap();}; el.appendChild(row);
     });
   } else {
     RISK.forEach(d=>{
       const col=rCol(d.hi); const row=document.createElement('div'); row.className='rank-row'+(selMSA&&selMSA.n===d.n?' sel':'');
-      row.innerHTML=`<span class="rank-name">${d.n}</span><div class="rank-track"><div class="rank-bar" style="width:${d.hi}%;background:${col}"></div></div><span class="rank-val">${d.hi}%</span>`;
+      row.innerHTML='<span class="rank-name">'+d.n+'</span><div class="rank-track"><div class="rank-bar" style="width:'+d.hi+'%;background:'+col+'"></div></div><span class="rank-val">'+d.hi+'%</span>';
       row.onclick=()=>{selMSA=d;updateDetail(d);buildRank();drawMap();}; el.appendChild(row);
     });
   }
@@ -205,8 +224,8 @@ function buildRank(){
 
 function updateLeg(){
   const el=document.getElementById('mapLeg');
-  if(mode==='emp') el.innerHTML=`<span class="leg-item"><span class="leg-sq" style="background:${SEC_COL[activeSec]};opacity:.6"></span>Employment (size = workers)</span>`;
-  else el.innerHTML=`<span class="leg-item"><span class="leg-sq" style="background:#A32D2D"></span>&gt;40% high risk</span><span class="leg-item"><span class="leg-sq" style="background:#E24B4A"></span>20–40% mid</span><span class="leg-item"><span class="leg-sq" style="background:#F09595"></span>&lt;20% lower</span><span style="font-size:11px;color:var(--muted)">size = workers at risk</span>`;
+  if(mode==='emp') el.innerHTML='<span class="leg-item"><span class="leg-sq" style="background:'+SEC_COL[activeSec]+';opacity:.6"></span>Employment (size = workers)</span>';
+  else el.innerHTML='<span class="leg-item"><span class="leg-sq" style="background:#A32D2D"></span>&gt;40% high risk</span><span class="leg-item"><span class="leg-sq" style="background:#E24B4A"></span>20-40% mid</span><span class="leg-item"><span class="leg-sq" style="background:#F09595"></span>&lt;20% lower</span><span style="font-size:11px;color:var(--muted)">size = workers at risk</span>';
 }
 
 function setMode(m){
@@ -214,8 +233,8 @@ function setMode(m){
   document.getElementById('mEmp').classList.toggle('active',m==='emp');
   document.getElementById('mRisk').classList.toggle('active',m==='risk');
   document.getElementById('secBtns').style.visibility=m==='emp'?'visible':'hidden';
-  document.getElementById('mapHead').textContent=m==='emp'?`Sector employment — ${activeSec}`:'Displacement pressure — all sectors';
-  document.getElementById('rankHead').textContent=m==='emp'?`${activeSec} employment by MSA`:'MSA ranking by displacement share';
+  document.getElementById('mapHead').textContent=m==='emp'?'Sector employment — '+activeSec:'Displacement pressure — all sectors';
+  document.getElementById('rankHead').textContent=m==='emp'?activeSec+' employment by MSA':'MSA ranking by displacement share';
   updateLeg(); buildRank(); updateDetail(null); drawMap();
 }
 
@@ -225,8 +244,8 @@ document.getElementById('secBtns').addEventListener('click',e=>{
   if(!e.target.dataset.sec) return;
   activeSec=e.target.dataset.sec; selMSA=null;
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.toggle('active',b.dataset.sec===activeSec));
-  document.getElementById('mapHead').textContent=`Sector employment — ${activeSec}`;
-  document.getElementById('rankHead').textContent=`${activeSec} employment by MSA`;
+  document.getElementById('mapHead').textContent='Sector employment — '+activeSec;
+  document.getElementById('rankHead').textContent=activeSec+' employment by MSA';
   updateLeg(); buildRank(); updateDetail(null); drawMap();
 });
 
