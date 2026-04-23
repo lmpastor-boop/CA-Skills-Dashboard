@@ -15,13 +15,13 @@ main { max-width: 1000px; margin: 0 auto; padding: 40px 24px 64px; }
 .intro p { font-size: 14px; color: #475569; line-height: 1.7; }
 .intro .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: #EEF2FF; color: #3730A3; font-weight: 500; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-.card { background: #fff; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); padding: 22px 24px 20px; text-decoration: none; color: inherit; display: block; transition: transform 0.15s, box-shadow 0.15s; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; align-items: stretch; }
+.card { background: #fff; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); padding: 22px 24px 20px; text-decoration: none; color: inherit; display: flex; flex-direction: column; transition: transform 0.15s, box-shadow 0.15s; }
 .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
 .card-num { font-size: 11px; font-weight: 500; font-family: monospace; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
 .card-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
 .card h2 { font-size: 15px; font-weight: 500; margin-bottom: 8px; line-height: 1.3; }
-.card p { font-size: 13px; color: #64748B; line-height: 1.6; margin-bottom: 16px; }
+.card p { font-size: 13px; color: #64748B; line-height: 1.6; margin-bottom: 16px; flex: 1; }
 .card .pills { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 18px; }
 .card .pill { font-size: 10px; padding: 2px 8px; border-radius: 12px; font-weight: 500; }
 .card .cta { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: 8px; color: #fff; text-decoration: none; }
@@ -50,7 +50,6 @@ main { max-width: 1000px; margin: 0 auto; padding: 40px 24px 64px; }
   <div class="cards">
 
     <a href="dashboard_00_forecaster.html" class="card">
-      <div class="card-num">Skills Intelligence</div>
       <div class="card-icon" style="background:#E8F4F8">
         <svg viewBox="0 0 24 24" fill="none" stroke="#1C7293" stroke-width="2" width="20" height="20"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       </div>
@@ -65,7 +64,6 @@ main { max-width: 1000px; margin: 0 auto; padding: 40px 24px 64px; }
     </a>
 
     <a href="dashboard_01_scenarios.html" class="card">
-      <div class="card-num">Exhibit 04</div>
       <div class="card-icon" style="background:#EEF2FF">
         <svg viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" width="20" height="20"><path d="M3 18l4-8 4 4 4-6 4 6"/></svg>
       </div>
@@ -80,7 +78,6 @@ main { max-width: 1000px; margin: 0 auto; padding: 40px 24px 64px; }
     </a>
 
     <a href="dashboard_02_explorer.html" class="card">
-      <div class="card-num">Exhibits 01 &amp; 02</div>
       <div class="card-icon" style="background:#E6F1FB">
         <svg viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" width="20" height="20"><circle cx="8" cy="15" r="3"/><circle cx="16" cy="9" r="4"/><circle cx="5" cy="7" r="2"/></svg>
       </div>
@@ -95,7 +92,6 @@ main { max-width: 1000px; margin: 0 auto; padding: 40px 24px 64px; }
     </a>
 
     <a href="dashboard_03_geo.html" class="card">
-      <div class="card-num">Exhibits 03 &amp; 05</div>
       <div class="card-icon" style="background:#FCEBEB">
         <svg viewBox="0 0 24 24" fill="none" stroke="#A32D2D" stroke-width="2" width="20" height="20"><circle cx="12" cy="10" r="3"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
       </div>
